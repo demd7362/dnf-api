@@ -1,0 +1,34 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org" lang="ko">
+	<head>
+		<meta charset="UTF-8">
+		<title>Title</title>
+		<th:block th:replace='~{fragments/common :: commonHeader}'/>
+		<script>
+			async function searchCharacter(){
+				const serverId = $('.server').val()
+				const characterName = $('#character-name').val()
+				const response = await axios.get(`/dnf/servers/${serverId}/characters/${characterName}`)
+				console.log(response)
+			}
+		</script>
+	</head>
+	<body>
+		<div class="flex-box">
+			<label for="server"></label>
+			<select id="server">
+				<option value="anton">안톤</option>
+				<option value="bakal">바칼</option>
+				<option value="cain">카인</option>
+				<option value="casillas">카시야스</option>
+				<option value="diregie">디레지에</option>
+				<option value="hilder">힐더</option>
+				<option value="prey">프레이</option>
+				<option value="siroco">시로코</option>
+			</select>
+			<label for="character-name"></label>
+			<input id="character-name"/>
+			<button onclick="searchCharacter()">캐릭터 검색</button>
+		</div>
+	</body>
+</html>

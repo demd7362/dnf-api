@@ -12,24 +12,27 @@ import org.springframework.web.client.RestClient
 class DnfApiService(private val restClient: RestClient) {
     private final val log = logger()
 
-    fun searchCharacter(server: String,characterName: String): CharacterDto {
-        val result = restClient.get()
-            .uri("/df/servers/prey/characters?characterName=$characterName&apikey=nls6D7bt0zYVaFiSAOcHIaZ1ghKjiE24")
-            .retrieve()
-            .body(object : ParameterizedTypeReference<ApiResponseDto<CharacterDto>>() {})
-        return result!!.rows[0] // 서버, 캐릭터 검색이므로 [0]
+    fun searchCharacter(serverId: String, characterName: String): CharacterDto {
+        try {
+            val result = restClient.get()
+                .uri("/df/servers/prey/characters?characterName=$characterName&apikey=nls6D7bt0zYVaFiSAOcHIaZ1ghKjiE24")
+                .retrieve()
+                .body(object : ParameterizedTypeReference<ApiResponseDto<CharacterDto>>() {})
+            return result!!.rows[0] // 서버, 캐릭터 검색이므로 [0]
+        } catch (e: Exception){
+            log.info(e.toString())
+            throw e
+        }
+
     }
-    fun searchTimeline(server:String, characterName: String){
-        val charactorDto = searchCharacter(server, characterName)
+    fun searchTimeline(serverId:String, characterName: String){
+        val charactorDto = searchCharacter(serverId, characterName)
         val result = restClient.get()
-            .uri("/df/servers/$server/characters/${charactorDto.characterId}/timeline?apikey=nls6D7bt0zYVaFiSAOcHIaZ1ghKjiE24")
+            .uri("/df/servers/$serverId/characters/${charactorDto.characterId}/timeline?apikey=nls6D7bt0zYVaFiSAOcHIaZ1ghKjiE24")
             .retrieve()
             .body(TimelineResponseDto::class.java)
         log.info("result, {}", result)
 
-    }
-    init {
-        searchTimeline("""prey""","구미시민")
     }
 
 }
