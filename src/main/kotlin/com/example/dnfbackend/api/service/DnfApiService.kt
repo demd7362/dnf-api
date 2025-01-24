@@ -15,7 +15,7 @@ class DnfApiService(private val restClient: RestClient) {
     fun searchCharacter(serverId: String, characterName: String): CharacterDto {
         try {
             val result = restClient.get()
-                .uri("/df/servers/prey/characters?characterName=$characterName&apikey=nls6D7bt0zYVaFiSAOcHIaZ1ghKjiE24")
+                .uri("/df/servers/prey/characters?characterName=$characterName")
                 .retrieve()
                 .body(object : ParameterizedTypeReference<ApiResponseDto<CharacterDto>>() {})
             return result!!.rows[0] // 서버, 캐릭터 검색이므로 [0]
@@ -25,14 +25,13 @@ class DnfApiService(private val restClient: RestClient) {
         }
 
     }
-    fun searchTimeline(serverId:String, characterName: String){
+    fun searchTimeline(serverId:String, characterName: String): TimelineResponseDto{
         val charactorDto = searchCharacter(serverId, characterName)
         val result = restClient.get()
-            .uri("/df/servers/$serverId/characters/${charactorDto.characterId}/timeline?apikey=nls6D7bt0zYVaFiSAOcHIaZ1ghKjiE24")
+            .uri("/df/servers/$serverId/characters/${charactorDto.characterId}/timeline")
             .retrieve()
             .body(TimelineResponseDto::class.java)
-        log.info("result, {}", result)
-
+        return result!!
     }
 
 }

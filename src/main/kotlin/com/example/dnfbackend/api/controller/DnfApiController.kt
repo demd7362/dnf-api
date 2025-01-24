@@ -17,4 +17,10 @@ class DnfApiController(private val dnfApiService: DnfApiService) {
         val result = dnfApiService.searchCharacter(serverId, characterName)
         return ResponseEntity.ok(result)
     }
+
+    @GetMapping("/servers/{serverId}/characters/{characterName}/timeline")
+    fun searchTimeline(@PathVariable serverId: String, @PathVariable characterName: String):ResponseEntity<Any> {
+        val result = dnfApiService.searchTimeline(serverId, characterName)
+        return ResponseEntity.ok(result)
+    }
 }

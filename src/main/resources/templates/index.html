@@ -9,26 +9,38 @@
 				const serverId = $('.server').val()
 				const characterName = $('#character-name').val()
 				const response = await axios.get(`/dnf/servers/${serverId}/characters/${characterName}`)
-				console.log(response)
+				$('#result').html(JSON.stringify(response.data))
+			}
+			async function searchTimeline(){
+				const serverId = $('.server').val()
+				const characterName = $('#character-name').val()
+				const response = await axios.get(`/dnf/servers/${serverId}/characters/${characterName}/timeline`)
+				$('#result').html(JSON.stringify(response.data))
 			}
 		</script>
 	</head>
 	<body>
-		<div class="flex-box">
-			<label for="server"></label>
-			<select id="server">
-				<option value="anton">안톤</option>
-				<option value="bakal">바칼</option>
-				<option value="cain">카인</option>
-				<option value="casillas">카시야스</option>
-				<option value="diregie">디레지에</option>
-				<option value="hilder">힐더</option>
-				<option value="prey">프레이</option>
-				<option value="siroco">시로코</option>
-			</select>
-			<label for="character-name"></label>
-			<input id="character-name"/>
-			<button onclick="searchCharacter()">캐릭터 검색</button>
+		<div class="container">
+			<div class="form-group">
+				<label for="server">서버 선택:</label>
+				<select id="server" class="form-control">
+					<option value="anton">안톤</option>
+					<option value="bakal">바칼</option>
+					<option value="cain">카인</option>
+					<option value="casillas">카시야스</option>
+					<option value="diregie">디레지에</option>
+					<option value="hilder">힐더</option>
+					<option value="prey">프레이</option>
+					<option value="siroco">시로코</option>
+				</select>
+			</div>
+			<div class="form-group">
+				<label for="character-name">캐릭터 이름:</label>
+				<input id="character-name" class="form-control" placeholder="캐릭터 이름을 입력하세요"/>
+			</div>
+			<button class="btn btn-primary" onclick="searchCharacter()">캐릭터 검색</button>
+			<button class="btn btn-primary" onclick="searchTimeline()">타임라인 검색</button>
+			<div id="result"></div>
 		</div>
 	</body>
 </html>
