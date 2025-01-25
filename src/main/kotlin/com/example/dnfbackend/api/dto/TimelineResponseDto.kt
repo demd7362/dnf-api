@@ -1,5 +1,8 @@
 package com.example.dnfbackend.api.dto
 
+import com.fasterxml.jackson.annotation.JsonIgnore
+import kotlin.reflect.jvm.internal.impl.load.kotlin.JvmType
+
 data class TimelineResponseDto(
     val adventureName: String,
     val characterId: String,
@@ -17,7 +20,7 @@ data class TimelineResponseDto(
 ) {
     data class TimeLine(
         val date: Date,
-        val next: String,
+        val next: String?,
         val rows: List<TimelineRow>
     ) {
         data class Date(
@@ -26,9 +29,19 @@ data class TimelineResponseDto(
         )
         data class TimelineRow (
             val code: Int,
-            val data: Map<String, String>,
+            val data: TimelineData,
             val date: String,
             val name: String,
-        )
+        ) {
+            data class TimelineData (
+                val channelName: String?,
+                val channelNo: Int?,
+                val dungeonName: String,
+                val itemId: String,
+                val itemName: String,
+                val itemRarity: String,
+                val mistGear: Boolean
+            )
+        }
     }
 }

@@ -6,13 +6,13 @@
 		<th:block th:replace='~{fragments/common :: commonHeader}'/>
 		<script>
 			async function searchCharacter(){
-				const serverId = $('.server').val()
+				const serverId = $('#server').val()
 				const characterName = $('#character-name').val()
 				const response = await axios.get(`/dnf/servers/${serverId}/characters/${characterName}`)
 				$('#result').html(JSON.stringify(response.data))
 			}
 			async function searchTimeline(){
-				const serverId = $('.server').val()
+				const serverId = $('#server').val()
 				const characterName = $('#character-name').val()
 				const response = await axios.get(`/dnf/servers/${serverId}/characters/${characterName}/timeline`)
 				$('#result').html(JSON.stringify(response.data))

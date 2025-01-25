@@ -16,11 +16,6 @@ class AppConfig {
     fun restClient(): RestClient {
         return RestClient.builder()
             .baseUrl(Constant.BASE_URL)
-            .defaultRequest { request ->
-                request.attributes { attributes ->
-                    attributes["apikey"] = Constant.API_KEY
-                }
-            }
             .requestInterceptor { request, body, execution ->
                 log.info("Request: ${request.method} ${request.uri}")
                 val start = System.currentTimeMillis()
