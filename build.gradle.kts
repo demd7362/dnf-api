@@ -1,8 +1,34 @@
+import com.github.gradle.node.npm.task.NpxTask
+
 plugins {
     kotlin("jvm") version "1.9.25"
     kotlin("plugin.spring") version "1.9.25"
     id("org.springframework.boot") version "3.4.1"
     id("io.spring.dependency-management") version "1.1.7"
+    id("com.github.node-gradle.node") version "7.0.1"
+}
+node {
+    download = true
+    /**
+     * node version
+     */
+    version = "20.10.0"
+
+    /**
+     * npm version
+     */
+    npmVersion = "10.2.3"
+    nodeProjectDir = file("${projectDir}/src/main/resources/static")
+}
+
+
+val tailwindCss = tasks.register<NpxTask>("tailwindcss") {
+    command.set("tailwind")
+    args.set(listOf("-i", "${projectDir}/src/main/resources/static/css/tailwinds.css", "-o", "${projectDir}/src/main/resources/static/css/tailwind-out.css"))
+    dependsOn(tasks.npmInstall)
+}
+tasks.processResources {
+    dependsOn(tailwindCss)
 }
 
 group = "com.example"
@@ -34,6 +60,7 @@ java {
 repositories {
     mavenCentral()
 }
+
 
 dependencies {
     implementation("org.springframework.boot:spring-boot-starter-web")

@@ -1,0 +1,51 @@
+/* 공통 버튼 스타일 */
+.btn {
+    padding: 12px 24px;
+    border: none;
+    border-radius: 6px;
+    font-size: 16px;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    text-align: center;
+    display: inline-block;
+    margin: 10px;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+}
+
+/* 노란색 버튼 */
+.btn-yellow {
+    background-color: #FFD700;
+    color: #333;
+}
+
+.btn-yellow:hover {
+    background-color: #FFC000;
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.15);
+    transform: translateY(-2px);
+}
+
+/* 주황색 버튼 */
+.btn-orange {
+    background-color: #FF8C00;
+    color: white;
+}
+
+.btn-orange:hover {
+    background-color: #FF7000;
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.15);
+    transform: translateY(-2px);
+}
+
+/* 초록색 사각형 버튼 */
+.btn-green {
+    background-color: #4CAF50;
+    color: white;
+    border-radius: 2px; /* 더 사각형같은 모양을 위해 border-radius 줄임 */
+}
+
+.btn-green:hover {
+    background-color: #45a049;
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.15);
+    transform: translateY(-2px);
+}

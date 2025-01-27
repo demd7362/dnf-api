@@ -5,42 +5,97 @@
 		<title>Title</title>
 		<th:block th:replace='~{fragments/common :: commonHeader}'/>
 		<script>
-			async function searchCharacter(){
-				const serverId = $('#server').val()
-				const characterName = $('#character-name').val()
-				const response = await axios.get(`/dnf/servers/${serverId}/characters/${characterName}`)
-				$('#result').html(JSON.stringify(response.data))
+			const buttonClassMap = {
+				'레전더리': 'px-3 py-1 text-sm font-medium rounded-full bg-orange-500 text-white',
+				'에픽': 'px-3 py-1 text-sm font-medium rounded-full bg-yellow-500 text-white',
+				'태초': 'px-3 py-1 text-sm font-medium rounded-full bg-green-500 text-white'
 			}
-			async function searchTimeline(){
-				const serverId = $('#server').val()
-				const characterName = $('#character-name').val()
-				const response = await axios.get(`/dnf/servers/${serverId}/characters/${characterName}/timeline`)
-				$('#result').html(JSON.stringify(response.data))
+			
+			function handleChangeServer(self) {
+				localStorage.setItem('server', self.value)
 			}
+			
+			const searchTimeline = (() => {
+				let lastSearch = 0
+				const searchDelay = 1000
+				return async () => {
+					const serverId = $('#server').val()
+					const characterName = $('#character-name').val()
+					if (!characterName || Date.now() - lastSearch < searchDelay) {
+						return
+					}
+					localStorage.setItem('characterName', characterName)
+					lastSearch = Date.now()
+					$('#search-btn').prop('disabled', true)
+					setTimeout(() => {
+						$('#search-btn').prop('disabled', false)
+					}, searchDelay)
+					const {data} = await axios.get(`/dnf/servers/${serverId}/characters/${characterName}/timeline`)
+					const elements = data.map(({code, data, date, name}) => {
+						const buttonClass = buttonClassMap[data.itemRarity]
+						const channelInfo = data.channelName ? `${data.channelName} ${data.channelNo}` : '채널 정보 없음'
+						return `
+              <div class="flex items-center justify-between p-3 bg-white rounded-lg shadow-sm">
+                <div class="flex items-center space-x-2">
+                  <span class="text-gray-600">${channelInfo}</span>
+                  <span class="font-medium">${data.itemName}</span>
+                </div>
+                <span class="${buttonClass}">${data.itemRarity}</span>
+              </div>
+            `
+					})
+					$('#result').html(elements.join(''))
+				}
+			})()
+			
+			function handlePressEnter(event) {
+				if (event.keyCode === 13) {
+					searchTimeline()
+				}
+			}
+			
+			$(document).ready(function () {
+				const server = localStorage.getItem('server')
+				if (server) {
+					$('#server').val(server)
+				}
+				const characterName = localStorage.getItem('characterName')
+				if (characterName) {
+					$('#character-name').val(characterName)
+				}
+			})
 		</script>
 	</head>
-	<body>
-		<div class="container">
-			<div class="form-group">
-				<label for="server">서버 선택:</label>
-				<select id="server" class="form-control">
-					<option value="anton">안톤</option>
-					<option value="bakal">바칼</option>
-					<option value="cain">카인</option>
-					<option value="casillas">카시야스</option>
-					<option value="diregie">디레지에</option>
-					<option value="hilder">힐더</option>
-					<option value="prey">프레이</option>
-					<option value="siroco">시로코</option>
-				</select>
+	<body class="bg-gray-50 min-h-screen">
+		<div class="container mx-auto px-4 py-8 max-w-2xl">
+			<div class="bg-white rounded-xl shadow-lg p-6 space-y-6">
+				<div class="space-y-4">
+					<div class="space-y-2">
+						<label for="server" class="block text-sm font-medium text-gray-700">서버 선택:</label>
+						<select id="server" class="block w-full rounded-lg border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500" onchange="handleChangeServer(this)">
+							<option value="anton">안톤</option>
+							<option value="bakal">바칼</option>
+							<option value="cain">카인</option>
+							<option value="casillas">카시야스</option>
+							<option value="diregie">디레지에</option>
+							<option value="hilder">힐더</option>
+							<option value="prey">프레이</option>
+							<option value="siroco">시로코</option>
+						</select>
+					</div>
+					
+					<div class="space-y-2">
+						<label for="character-name" class="block text-sm font-medium text-gray-700">캐릭터 이름:</label>
+						<input type="text" id="character-name" class="block w-full rounded-lg border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500" placeholder="캐릭터 이름을 입력하세요" onkeydown="handlePressEnter(event)"/>
+					</div>
+					
+					<button id="search-btn" class="w-full bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 disabled:opacity-50 disabled:cursor-not-allowed transition-colors" onclick="searchTimeline()">
+						타임라인 검색
+					</button>
+				</div>
+				
+				<div id="result" class="space-y-2"></div>
 			</div>
-			<div class="form-group">
-				<label for="character-name">캐릭터 이름:</label>
-				<input id="character-name" class="form-control" placeholder="캐릭터 이름을 입력하세요"/>
-			</div>
-			<button class="btn btn-primary" onclick="searchCharacter()">캐릭터 검색</button>
-			<button class="btn btn-primary" onclick="searchTimeline()">타임라인 검색</button>
-			<div id="result"></div>
 		</div>
 	</body>
 </html>
