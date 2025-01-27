@@ -16,8 +16,8 @@ class ApiErrorAspect {
     }
 
     @Around("apiErrorPointcut()")
-    fun apiErrorAround(pjp: ProceedingJoinPoint): Any? {
-        val proceed: Any?
+    fun apiErrorAround(pjp: ProceedingJoinPoint): Any {
+        val proceed: Any
         try {
             proceed = pjp.proceed()
         } catch (e: Exception) {

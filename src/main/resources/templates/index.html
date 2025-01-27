@@ -2,7 +2,7 @@
 <html xmlns:th="http://www.thymeleaf.org" lang="ko">
 	<head>
 		<meta charset="UTF-8">
-		<title>Title</title>
+		<title>태초줘</title>
 		<th:block th:replace='~{fragments/common :: commonHeader}'/>
 		<script>
 			const buttonClassMap = {
@@ -11,8 +11,187 @@
 				'태초': 'px-3 py-1 text-sm font-medium rounded-full bg-green-500 text-white'
 			}
 			
+			let currentData = []
+			let activeFilter = 'all'
+			let sortAscending = true
+			let chartInstance = null
+			
+			function toggleChart() {
+				if (chartInstance) {
+					chartInstance.destroy()
+					chartInstance = null
+					$('#chart-container').remove()
+					displayFilteredResults()
+				} else {
+					createChart()
+				}
+				updateChartButton()
+			}
+			
+			function createChart() {
+				if (chartInstance) {
+					chartInstance.destroy()
+				}
+				const chartData = activeFilter === 'all' ? currentData : currentData.filter(item => item.data.itemRarity === activeFilter)
+				const channelCounts = chartData.reduce((acc, {data}) => {
+					const channelKey = data.channelName ? `${data.channelName} ${data.channelNo}` : '채널 정보 없음'
+					acc[channelKey] = (acc[channelKey] || 0) + 1
+					return acc
+				}, {})
+				
+				const sortedChannels = Object.entries(channelCounts)
+						.sort(([, a], [, b]) => b - a)
+				// .slice(0, 10)
+				
+				if (sortedChannels.length === 0) {
+					alert('차트를 표시할 데이터가 없습니다.')
+					return
+				}
+				$('#result').html(`
+            <div id="chart-container" class="mt-4">
+                <canvas id="channel-chart"></canvas>
+            </div>
+          `)
+				
+				const ctx = document.getElementById('channel-chart').getContext('2d')
+				chartInstance = new Chart(ctx, {
+					type: 'bar',
+					data: {
+						labels: sortedChannels.map(([label]) => label),
+						datasets: [{
+							label: '채널 출현 횟수',
+							data: sortedChannels.map(([, count]) => count),
+							backgroundColor: 'rgba(54, 162, 235, 0.5)',
+							borderColor: 'rgba(54, 162, 235, 1)',
+							borderWidth: 1
+						}]
+					},
+					options: {
+						responsive: true,
+						scales: {
+							y: {
+								beginAtZero: true,
+								ticks: {stepSize: 1}
+							}
+						}
+					}
+				})
+			}
+			
 			function handleChangeServer(self) {
 				localStorage.setItem('server', self.value)
+			}
+			
+			function updateStats(data) {
+				const stats = data.reduce((acc, item) => {
+					acc[item.data.itemRarity]++
+					return acc
+				}, {
+					'레전더리': 0,
+					'에픽': 0,
+					'태초': 0
+				})
+				
+				const statsHtml = Object.entries(stats).map(([rarity, count]) => {
+					const buttonClass = buttonClassMap[rarity]
+					return `
+						<button onclick="filterByRarity('${rarity}')" class="${buttonClass} flex items-center space-x-2">
+							<span>${rarity}</span>
+							<span class="bg-white bg-opacity-20 px-2 rounded-full">${count}</span>
+						</button>
+					`
+				}).join('')
+				
+				$('#stats').html(`
+					<div class="flex items-center space-x-2 mb-4">
+						<button onclick="filterByRarity('all')" class="px-3 py-1 text-sm font-medium rounded-full bg-gray-500 text-white">
+							전체 보기
+						</button>
+						${statsHtml}
+					</div>
+				`)
+				updateSortButton()
+			}
+			
+			function updateSortButton() {
+				$('#sort').html(`
+                <button onclick="sortFilteredData()" class="px-3 py-1 text-sm font-medium rounded-full bg-purple-500 text-white hover:bg-purple-600 transition-colors">
+                    ${sortAscending ? '↓ 최신 순' : '↑ 오래된 순'}
+                </button>
+            `)
+			}
+			
+			function updateChartButton() {
+				$('#chart').html(`
+				  <button onclick="toggleChart()" class="px-3 py-1 text-sm font-medium rounded-full bg-blue-500 text-white hover:bg-blue-600 transition-colors">
+				      채널별 통계 ${chartInstance ? '닫기' : '보기'}
+					</button>
+				`)
+			}
+			
+			function sortFilteredData() {
+				sortAscending = !sortAscending
+				currentData = currentData.reverse() // fetched data는 항상 정렬되어있어서 reverse
+				displayFilteredResults()
+			}
+			
+			function filterByRarity(rarity) {
+				activeFilter = rarity
+				displayFilteredResults()
+				if (chartInstance) {
+					chartInstance.destroy()
+					chartInstance = null
+				}
+			}
+			
+			function filterByChannel(channelName) {
+				currentData = currentData.filter(item => item.data.channelName === channelName)
+				updateStats(currentData)
+				displayFilteredResults()
+			}
+			
+			/**
+			 * fetch data, sort, rarity 조회
+			 */
+			function displayFilteredResults() {
+				const filteredData = activeFilter === 'all' ? currentData : currentData.filter(item => item.data.itemRarity === activeFilter)
+				if (filteredData.length === 0) {
+					$('#result').html(`
+            <div class="p-4 text-center text-gray-500 bg-gray-50 rounded-lg">
+                검색 결과가 없습니다.
+            </div>
+          `)
+					return
+				}
+				const html = filteredData.reduce((acc, {code, data, date, name}) => {
+					const buttonClass = buttonClassMap[data.itemRarity]
+					const channelInfo = data.channelName ? `${data.channelName} ${data.channelNo}` : '채널 정보 없음'
+					return acc + `
+		        <div class="flex items-center justify-between p-3 bg-white rounded-lg shadow-sm">
+		            <div class="flex items-center space-x-2">
+		                <div class="relative group">
+		                    <span onclick="filterByChannel('${data.channelName}')" class="cursor-pointer text-gray-700 font-bold">
+		                        ${channelInfo}
+		                    </span>
+		                    <div class="absolute hidden group-hover:block bottom-full mb-2 left-1/2 -translate-x-1/2
+		                              bg-gray-600 text-white text-xs px-2 py-1 rounded whitespace-nowrap
+		                              transform transition-opacity duration-200">
+		                        ${new Date(date).toLocaleString()}
+		                        <div class="absolute w-2 h-2 bg-gray-600 rotate-45 -bottom-1 left-1/2 -translate-x-1/2"></div>
+		                    </div>
+		                </div>
+		                <span class="font-medium">${data.itemName}(${data.dungeonName})</span>
+		            </div>
+		            <span class="${buttonClass}">${data.itemRarity}</span>
+		        </div>
+		    `
+				}, '')
+				
+				
+				$('#result').html(html)
+				$('#search-btn').text(`타임라인 검색(결과 ${filteredData.length}개 조회 완료)`)
+				updateSortButton()
+				updateChartButton()
 			}
 			
 			const searchTimeline = (() => {
@@ -30,21 +209,11 @@
 					setTimeout(() => {
 						$('#search-btn').prop('disabled', false)
 					}, searchDelay)
+					
 					const {data} = await axios.get(`/dnf/servers/${serverId}/characters/${characterName}/timeline`)
-					const elements = data.map(({code, data, date, name}) => {
-						const buttonClass = buttonClassMap[data.itemRarity]
-						const channelInfo = data.channelName ? `${data.channelName} ${data.channelNo}` : '채널 정보 없음'
-						return `
-              <div class="flex items-center justify-between p-3 bg-white rounded-lg shadow-sm">
-                <div class="flex items-center space-x-2">
-                  <span class="text-gray-600">${channelInfo}</span>
-                  <span class="font-medium">${data.itemName}</span>
-                </div>
-                <span class="${buttonClass}">${data.itemRarity}</span>
-              </div>
-            `
-					})
-					$('#result').html(elements.join(''))
+					currentData = data
+					updateStats(data)
+					displayFilteredResults()
 				}
 			})()
 			
@@ -52,6 +221,11 @@
 				if (event.keyCode === 13) {
 					searchTimeline()
 				}
+			}
+			
+			async function getTaecho() {
+				const {data} = await axios.get('/dnf/channels/random')
+				alert(data)
 			}
 			
 			$(document).ready(function () {
@@ -67,12 +241,20 @@
 		</script>
 	</head>
 	<body class="bg-gray-50 min-h-screen">
-		<div class="container mx-auto px-4 py-8 max-w-2xl">
-			<div class="bg-white rounded-xl shadow-lg p-6 space-y-6">
+		<div class="container mx-auto px-4 py-8 max-w-4xl">
+			<div class="bg-white rounded-xl shadow-lg p-6 space-y-6 hover:shadow-xl transition-shadow">
+				<h1 onclick="getTaecho()" class="text-2xl font-bold text-gray-800 text-center cursor-pointer">태초줘</h1>
 				<div class="space-y-4">
 					<div class="space-y-2">
-						<label for="server" class="block text-sm font-medium text-gray-700">서버 선택:</label>
-						<select id="server" class="block w-full rounded-lg border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500" onchange="handleChangeServer(this)">
+						<label class="block text-sm font-medium text-gray-700">
+              <span class="flex items-center space-x-1">
+                <svg class="w-5 h-5 text-blue-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z"/>
+                </svg>
+                <span>서버 선택:</span>
+              </span>
+						</label>
+						<select onchange="handleChangeServer(this)" id="server" class="block w-full rounded-lg border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 transition-all">
 							<option value="anton">안톤</option>
 							<option value="bakal">바칼</option>
 							<option value="cain">카인</option>
@@ -85,17 +267,34 @@
 					</div>
 					
 					<div class="space-y-2">
-						<label for="character-name" class="block text-sm font-medium text-gray-700">캐릭터 이름:</label>
-						<input type="text" id="character-name" class="block w-full rounded-lg border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500" placeholder="캐릭터 이름을 입력하세요" onkeydown="handlePressEnter(event)"/>
+						<label class="block text-sm font-medium text-gray-700">
+              <span class="flex items-center space-x-1">
+                  <svg class="w-5 h-5 text-blue-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"/>
+                  </svg>
+                  <span>캐릭터 이름:</span>
+              </span>
+						</label>
+						<input onkeydown="handlePressEnter(event)" type="text" id="character-name" class="block w-full rounded-lg border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 transition-all placeholder-gray-400" placeholder="캐릭터 이름 입력"/>
 					</div>
 					
-					<button id="search-btn" class="w-full bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 disabled:opacity-50 disabled:cursor-not-allowed transition-colors" onclick="searchTimeline()">
+					<button onclick="searchTimeline()" id="search-btn" class="w-full bg-blue-600 text-white px-4 py-3 rounded-lg hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 disabled:opacity-50 disabled:cursor-not-allowed transition-all transform hover:scale-[1.01]">
 						타임라인 검색
 					</button>
 				</div>
 				
-				<div id="result" class="space-y-2"></div>
+				<div class="flex flex-col space-y-4">
+					<div class="flex justify-between items-center">
+						<div id="stats" class="flex flex-wrap gap-2"></div>
+						<div class="flex flex-row gap-2">
+							<div id="sort"></div>
+							<div id="chart"></div>
+						</div>
+					</div>
+					<div id="result" class="space-y-3"></div>
+				</div>
 			</div>
 		</div>
+	
 	</body>
 </html>

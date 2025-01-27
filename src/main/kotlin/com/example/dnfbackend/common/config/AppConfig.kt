@@ -26,4 +26,22 @@ class AppConfig {
             }
             .build()
     }
+    @Bean
+    fun channels():List<String> {
+        val channels = mutableListOf<String>()
+        for (i in 1..12) {
+            channels.add("벨 마이어 공국 $i")
+            channels.add("지벤 황국 $i")
+            channels.add("바하이트 $i")
+            channels.add("백해 $i")
+            if(i <= 10){
+                channels.add("마계 $i")
+            }
+        }
+        for( i in 40 .. 60){
+            channels.add("중천 $i")
+        }
+        channels.shuffle()
+        return channels
+    }
 }
