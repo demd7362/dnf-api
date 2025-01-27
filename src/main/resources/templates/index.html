@@ -141,6 +141,7 @@
 				if (chartInstance) {
 					chartInstance.destroy()
 					chartInstance = null
+					updateChartButton()
 				}
 			}
 			
@@ -206,11 +207,10 @@
 					localStorage.setItem('characterName', characterName)
 					lastSearch = Date.now()
 					$('#search-btn').prop('disabled', true)
+					const {data} = await axios.get(`/dnf/servers/${serverId}/characters/${characterName}/timeline`)
 					setTimeout(() => {
 						$('#search-btn').prop('disabled', false)
 					}, searchDelay)
-					
-					const {data} = await axios.get(`/dnf/servers/${serverId}/characters/${characterName}/timeline`)
 					currentData = data
 					updateStats(data)
 					displayFilteredResults()
