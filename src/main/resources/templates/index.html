@@ -10,6 +10,16 @@
 				'에픽': 'px-3 py-1 text-sm font-medium rounded-full bg-yellow-500 text-white',
 				'태초': 'px-3 py-1 text-sm font-medium rounded-full bg-green-500 text-white'
 			}
+			const serversMap = {
+				'anton': '안톤',
+				'bakal': '바칼',
+				'cain': '카인',
+				'casillas': '카시야스',
+				'diregie': '디레지에',
+				'hilder': '힐더',
+				'prey': '프레이',
+				'siroco': '시로코'
+			}
 			
 			let currentData = []
 			let activeFilter = 'all'
@@ -204,6 +214,7 @@
 					if (!characterName || Date.now() - lastSearch < searchDelay) {
 						return
 					}
+					saveRecentSearch(serverId, characterName)
 					localStorage.setItem('characterName', characterName)
 					lastSearch = Date.now()
 					$('#search-btn').prop('disabled', true)
@@ -237,7 +248,57 @@
 				if (characterName) {
 					$('#character-name').val(characterName)
 				}
+				renderRecentSearches()
 			})
+			function saveRecentSearch(server, character) {
+				const entry = { server, character, timestamp: new Date().toISOString() }
+				let searches = JSON.parse(localStorage.getItem('recentSearches') || '[]')
+				
+				// 중복 검사 및 최대 저장 수 제한
+				searches = searches.filter(s => s.server !== server || s.character !== character)
+				searches.unshift(entry)
+				searches = searches.slice(0, 10)
+				
+				localStorage.setItem('recentSearches', JSON.stringify(searches))
+				renderRecentSearches()
+			}
+			function renderRecentSearches() {
+				const searches = JSON.parse(localStorage.getItem('recentSearches') || '[]')
+				
+				const html = searches.map((entry, index) => `
+        <div class="flex items-center justify-between group">
+            <button onclick="fillSearchFields('${entry.server}', '${entry.character}')"
+                class="w-full text-left px-2 py-1.5 text-sm rounded hover:bg-gray-200 transition-colors">
+                <span class="font-medium">${entry.character}</span>
+                <span class="text-gray-500 ml-2">(${serversMap[entry.server] ?? '모험단'})</span>
+            </button>
+            <button onclick="deleteRecentSearch(${index})"
+                class="invisible group-hover:visible text-gray-400 hover:text-red-500 px-2">
+                ×
+            </button>
+        </div>
+    `).join('') || '<p class="text-gray-500 text-center py-2 text-sm">검색 기록이 없습니다</p>'
+				
+				$('#recent-searches').html(html)
+			}
+			
+			function fillSearchFields(server, character) {
+				$('#server').val(server)
+				$('#character-name').val(character)
+				searchTimeline()
+			}
+			
+			function deleteRecentSearch(index) {
+				let searches = JSON.parse(localStorage.getItem('recentSearches') || '[]')
+				searches.splice(index, 1)
+				localStorage.setItem('recentSearches', JSON.stringify(searches))
+				renderRecentSearches()
+			}
+			
+			function clearRecentSearches() {
+				localStorage.removeItem('recentSearches')
+				renderRecentSearches()
+			}
 		</script>
 	</head>
 	<body class="bg-gray-50 min-h-screen">
@@ -255,6 +316,7 @@
               </span>
 						</label>
 						<select onchange="handleChangeServer(this)" id="server" class="block w-full rounded-lg border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 transition-all">
+							<option value="adven">모험단</option>
 							<option value="anton">안톤</option>
 							<option value="bakal">바칼</option>
 							<option value="cain">카인</option>
@@ -276,6 +338,15 @@
               </span>
 						</label>
 						<input onkeydown="handlePressEnter(event)" type="text" id="character-name" class="block w-full rounded-lg border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 transition-all placeholder-gray-400" placeholder="캐릭터 이름 입력"/>
+					</div>
+					<div class="space-y-2">
+						<div class="flex items-center justify-between">
+							<span class="text-sm font-medium text-gray-700">최근 검색 내역</span>
+							<button onclick="clearRecentSearches()" class="text-xs text-gray-500 hover:text-gray-700">전체 삭제</button>
+						</div>
+						<div id="recent-searches" class="bg-gray-50 p-2 rounded-lg space-y-1 max-h-40 overflow-y-auto border border-gray-200">
+							<!-- 최근 검색 내역이 여기에 표시됩니다 -->
+						</div>
 					</div>
 					
 					<button onclick="searchTimeline()" id="search-btn" class="w-full bg-blue-600 text-white px-4 py-3 rounded-lg hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 disabled:opacity-50 disabled:cursor-not-allowed transition-all transform hover:scale-[1.01]">
