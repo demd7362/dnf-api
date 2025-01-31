@@ -8,7 +8,7 @@ import org.springframework.web.bind.annotation.RequestMapping
 import org.springframework.web.bind.annotation.RestController
 
 @RestController
-@RequestMapping("/dnf")
+@RequestMapping("/api")
 class DnfApiController(private val dnfApiService: DnfApiService) {
     @GetMapping("/servers/{serverId}/characters/{characterName}")
     fun searchCharacter(@PathVariable serverId: String, @PathVariable characterName: String): ResponseEntity<Any> {

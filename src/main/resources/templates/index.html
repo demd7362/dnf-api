@@ -211,6 +211,10 @@
 				return async () => {
 					const serverId = $('#server').val()
 					const characterName = $('#character-name').val()
+					if(serverId === 'adven'){
+						alert('미개발')
+						return
+					}
 					if (!characterName || Date.now() - lastSearch < searchDelay) {
 						return
 					}
@@ -218,13 +222,20 @@
 					localStorage.setItem('characterName', characterName)
 					lastSearch = Date.now()
 					$('#search-btn').prop('disabled', true)
-					const {data} = await axios.get(`/dnf/servers/${serverId}/characters/${characterName}/timeline`)
-					setTimeout(() => {
-						$('#search-btn').prop('disabled', false)
-					}, searchDelay)
-					currentData = data
-					updateStats(data)
-					displayFilteredResults()
+					const {data} = await axios.get(`/api/servers/${serverId}/characters/${characterName}/timeline`)
+					if(Array.isArray(data) && data.length > 0){
+						setTimeout(() => {
+							$('#search-btn').prop('disabled', false)
+						}, searchDelay)
+						currentData = data
+						updateStats(data)
+						displayFilteredResults()
+					} else {
+						alert('검색 결과가 없습니다.')
+						setTimeout(() => {
+							$('#search-btn').prop('disabled', false)
+						}, searchDelay)
+					}
 				}
 			})()
 			
@@ -235,7 +246,7 @@
 			}
 			
 			async function getTaecho() {
-				const {data} = await axios.get('/dnf/channels/random')
+				const {data} = await axios.get('/api/channels/random')
 				alert(data)
 			}
 			

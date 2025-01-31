@@ -5,7 +5,6 @@ server:
       enabled: true
       force: true
   port: 80
-  address: localhost
 
 spring:
   #  data:
@@ -32,7 +31,7 @@ spring:
     livereload:
       enabled: true
   thymeleaf:
-    cache: false
+    cache: true
     check-template-location: true
     prefix: classpath:/templates/
     suffix: .html

@@ -18,17 +18,19 @@ class DnfApiService(private val restClient: RestClient, private val channels: Li
         private val HELL_DUNGEONS = setOf("종말의 숭배자", "심연 : 종말의 숭배자")
     }
 
-    fun searchCharacter(serverId: String, characterName: String): CharacterDto {
+    fun searchCharacter(serverId: String, characterName: String): CharacterDto? {
         val result = restClient.get()
             .uri("/df/servers/$serverId/characters?characterName=$characterName&apikey=${Constant.API_KEY}")
             .retrieve()
             .body(object : ParameterizedTypeReference<ApiResponseDto<CharacterDto>>() {})
-        return result!!.rows[0] // 서버, 캐릭터 검색이므로 [0]
-
+        if (result!!.rows.isEmpty()) {
+            return null
+        }
+        return result.rows[0] // 서버, 캐릭터 검색이므로 [0]
     }
 
     fun searchTimeline(serverId: String, characterName: String): List<TimelineResponseDto.TimeLine.TimelineRow> {
-        val charactorDto = searchCharacter(serverId, characterName)
+        val charactorDto = searchCharacter(serverId, characterName) ?: return emptyList()
         val result = restClient.get()
             .uri("/df/servers/$serverId/characters/${charactorDto.characterId}/timeline?apikey=${Constant.API_KEY}&limit=100&code=505,513&start=2025-01-09 00:00&end=${DateUtils.getCurrentDate()}") // 던전 드랍, 카드 보상
             .retrieve()
