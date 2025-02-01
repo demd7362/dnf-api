@@ -4,6 +4,22 @@
 		<meta charset="UTF-8">
 		<title>태초줘</title>
 		<th:block th:replace='~{fragments/common :: commonHeader}'/>
+		<style>
+			/* 모바일 화면에서 버튼 크기 조정 */
+			@media (max-width: 640px) {
+				.button-sm {
+					padding: 0.25rem 0.5rem;
+					font-size: 0.875rem;
+				}
+				.flex-wrap-mobile {
+					flex-wrap: wrap;
+					gap: 0.5rem;
+				}
+				.gap-mobile {
+					gap: 0.5rem;
+				}
+			}
+		</style>
 		<script>
 			const buttonClassMap = {
 				'레전더리': 'px-3 py-1 text-sm font-medium rounded-full bg-orange-500 text-white',
@@ -356,7 +372,6 @@
 							<button onclick="clearRecentSearches()" class="text-xs text-gray-500 hover:text-gray-700">전체 삭제</button>
 						</div>
 						<div id="recent-searches" class="bg-gray-50 p-2 rounded-lg space-y-1 max-h-40 overflow-y-auto border border-gray-200">
-							<!-- 최근 검색 내역이 여기에 표시됩니다 -->
 						</div>
 					</div>
 					
@@ -366,17 +381,17 @@
 				</div>
 				
 				<div class="flex flex-col space-y-4">
-					<div class="flex justify-between items-center">
-						<div id="stats" class="flex flex-wrap gap-2"></div>
+					<div class="flex justify-between items-center flex-wrap-mobile gap-mobile">
+						<div id="stats" class="flex flex-wrap gap-2">
+						</div>
 						<div class="flex flex-row gap-2">
-							<div id="sort"></div>
-							<div id="chart"></div>
+							<div id="sort" class="button-sm"></div>
+							<div id="chart" class="button-sm"></div>
 						</div>
 					</div>
-					<div id="result" class="space-y-3"></div>
+					<div id="result" class="space-y-3">
+					</div>
 				</div>
-			</div>
 		</div>
-	
 	</body>
 </html>
