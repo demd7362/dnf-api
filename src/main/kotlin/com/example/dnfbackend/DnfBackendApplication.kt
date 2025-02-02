@@ -3,6 +3,7 @@ package com.example.dnfbackend
 import org.slf4j.LoggerFactory
 import org.springframework.boot.autoconfigure.SpringBootApplication
 import org.springframework.boot.runApplication
+import org.springframework.boot.web.servlet.ServletComponentScan
 import org.springframework.context.annotation.EnableAspectJAutoProxy
 
 @SpringBootApplication

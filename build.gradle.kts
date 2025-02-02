@@ -73,7 +73,9 @@ dependencies {
     developmentOnly("org.springframework.boot:spring-boot-devtools")
     implementation("org.springframework:spring-aop")
     implementation("org.springframework:spring-aspects")
-
+    implementation("org.springframework.boot:spring-boot-starter-actuator:3.4.1")
+//    implementation("org.springframework.boot:spring-boot-starter-security")
+//    testImplementation("org.springframework.security:spring-security-test")
 }
 
 kotlin {
