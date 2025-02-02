@@ -4,35 +4,23 @@ server:
       charset: UTF-8
       enabled: true
       force: true
-  port: 80
 
 spring:
-  #  data:
-  #    redis:
-  #      host: localhost
-  #      port: 6379
   web:
     resources:
       static-locations: classpath:/static/
-  #  jpa:
-  #    hibernate:
-  #      ddl-auto: update # hibernate?? ??
-  #    #      naming:
-  #    #        physical-strategy: com.spm.common.strategy.CamelToSnakeUpperStrategy
-  #    show-sql: true  # SQL ?? ?? ??
-  #    generate-ddl: false # ? ??? ??? ???? ??
-  #    open-in-view: false # HTTP ??? ??? ??? ??? ?????? ??? ????
-  #    properties:
-  #      hibernate:
-  #        format_sql: true
-  devtools:
-    restart:
-      enabled: true
-    livereload:
-      enabled: true
   thymeleaf:
     cache: true
     check-template-location: true
     prefix: classpath:/templates/
     suffix: .html
     encoding: UTF-8
+management:
+  endpoints:
+    web:
+      exposure:
+        include: health,info
+  endpoint:
+    health:
+      probes:
+        enabled: true

@@ -4,8 +4,6 @@ server:
       charset: UTF-8
       enabled: true
       force: true
-  port: 80
-  address: localhost
 
 spring:
   #  data:
