@@ -3,7 +3,7 @@ package com.example.dnfbackend.api.service
 import com.example.dnfbackend.api.dto.ApiResponseDto
 import com.example.dnfbackend.api.dto.CharacterDto
 import com.example.dnfbackend.api.dto.TimelineResponseDto
-import com.example.dnfbackend.common.constant.Constant
+import com.example.dnfbackend.common.config.Credentials
 import com.example.dnfbackend.common.utils.DateUtils
 import com.example.dnfbackend.logger
 import org.springframework.core.ParameterizedTypeReference
@@ -11,7 +11,9 @@ import org.springframework.stereotype.Service
 import org.springframework.web.client.RestClient
 
 @Service
-class DnfApiService(private val restClient: RestClient, private val channels: List<String>) {
+class DnfApiService(private val restClient: RestClient,
+                    private val channels: List<String>,
+                    private val crendentials: Credentials) {
     private final val log = logger()
     companion object {
         private val CARD_DUNGEONS = setOf(
@@ -29,10 +31,11 @@ class DnfApiService(private val restClient: RestClient, private val channels: Li
         )
         private val HELL_DUNGEONS = setOf("종말의 숭배자", "심연 : 종말의 숭배자")
     }
+    fun getApiKey(): String = crendentials.apiKey
 
     fun searchCharacter(serverId: String, characterName: String): CharacterDto? {
         val result = restClient.get()
-            .uri("/df/servers/$serverId/characters?characterName=$characterName&apikey=${Constant.API_KEY}")
+            .uri("/df/servers/$serverId/characters?characterName=$characterName&apikey=${getApiKey()}")
             .retrieve()
             .body(object : ParameterizedTypeReference<ApiResponseDto<CharacterDto>>() {})
         if (result!!.rows.isEmpty()) {
@@ -44,7 +47,7 @@ class DnfApiService(private val restClient: RestClient, private val channels: Li
     fun searchTimeline(serverId: String, characterName: String): List<TimelineResponseDto.TimeLine.TimelineRow> {
         val charactorDto = searchCharacter(serverId, characterName) ?: return emptyList()
         val result = restClient.get()
-            .uri("/df/servers/$serverId/characters/${charactorDto.characterId}/timeline?apikey=${Constant.API_KEY}&limit=100&code=505,513&start=2025-01-09 00:00&end=${DateUtils.getCurrentDate()}") // 던전 드랍, 카드 보상
+            .uri("/df/servers/$serverId/characters/${charactorDto.characterId}/timeline?apikey=${getApiKey()}&limit=100&code=505,513&start=2025-01-09 00:00&end=${DateUtils.getCurrentDate()}") // 던전 드랍, 카드 보상
             .retrieve()
             .body(TimelineResponseDto::class.java)
         val filtered = result!!.timeline.rows.filter {

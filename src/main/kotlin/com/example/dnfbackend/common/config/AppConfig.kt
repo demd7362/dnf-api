@@ -1,21 +1,34 @@
 package com.example.dnfbackend.common.config
 
-import com.example.dnfbackend.common.constant.Constant
+import com.example.dnfbackend.common.constant.Api
+import com.example.dnfbackend.common.utils.SystemEnvironment
 import com.example.dnfbackend.logger
+import com.fasterxml.jackson.databind.ObjectMapper
 import org.springframework.context.annotation.Bean
 import org.springframework.context.annotation.Configuration
-import org.springframework.http.client.ClientHttpRequestInterceptor
 import org.springframework.web.client.RestClient
-import org.springframework.web.util.UriBuilder
-import org.springframework.web.util.UriBuilderFactory
+import java.nio.file.Files
+import java.nio.file.Path
 
 @Configuration
-class AppConfig {
+class AppConfig(private val objectMapper: ObjectMapper) {
     private val log = logger()
+    @Bean
+    fun deserializeCredentials(): Credentials {
+        val path: Path = when {
+            SystemEnvironment.isWindows() -> Path.of("config.json") // 루트 디렉토리
+            SystemEnvironment.isLinux() -> Path.of("etc/config.json")
+            else -> throw RuntimeException("Unsupported OS")
+        }
+
+        val json = Files.readString(path)
+        return objectMapper.readValue(json, Credentials::class.java)
+    }
+
     @Bean
     fun restClient(): RestClient {
         return RestClient.builder()
-            .baseUrl(Constant.BASE_URL)
+            .baseUrl(Api.BASE_URL)
             .requestInterceptor { request, body, execution ->
                 log.info("Request: ${request.method} ${request.uri}")
                 val start = System.currentTimeMillis()
