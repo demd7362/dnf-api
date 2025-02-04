@@ -14,7 +14,19 @@ import org.springframework.web.client.RestClient
 class DnfApiService(private val restClient: RestClient, private val channels: List<String>) {
     private final val log = logger()
     companion object {
-        private val CARD_DUNGEONS = setOf("모독 : 적막의 회랑", "환란 : 별내림 숲", "달이 잠긴 호수", "꿈결 속 솔리다리스", "애쥬어 메인", "죽음의 여신전", "꿈결 속 흰 구름 계곡")
+        private val CARD_DUNGEONS = setOf(
+            "모독 : 적막의 회랑",
+            "환란 : 별내림 숲",
+            "달이 잠긴 호수",
+            "꿈결 속 솔리다리스",
+            "애쥬어 메인",
+            "죽음의 여신전",
+            "꿈결 속 흰 구름 계곡",
+            "광포 : 크루얼 비스트",
+            "광포 : 청해의 심장",
+            "모독 : 일렁이는 군도",
+            "환란 : 길잡이 강"
+        )
         private val HELL_DUNGEONS = setOf("종말의 숭배자", "심연 : 종말의 숭배자")
     }
 
