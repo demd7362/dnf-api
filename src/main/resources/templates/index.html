@@ -11,10 +11,12 @@
 					padding: 0.25rem 0.5rem;
 					font-size: 0.875rem;
 				}
+				
 				.flex-wrap-mobile {
 					flex-wrap: wrap;
 					gap: 0.5rem;
 				}
+				
 				.gap-mobile {
 					gap: 0.5rem;
 				}
@@ -138,13 +140,15 @@
 				`)
 				updateSortButton()
 			}
-			function createClearFilterButton(){
+			
+			function createClearFilterButton() {
 				$('#clear-filter').html(`
 					<button onclick="clearFilter()" class="px-3 py-1 text-sm font-medium rounded-full bg-gray-500 text-white">
 						필터 초기화
 					</button>
 				`)
 			}
+			
 			function updateSortButton() {
 				$('#sort').html(`
                 <button onclick="sortFilteredData()" class="px-3 py-1 text-sm font-medium rounded-full bg-purple-500 text-white hover:bg-purple-600 transition-colors">
@@ -173,14 +177,16 @@
 				clearChart()
 				// updateStats 필요없음
 			}
-			function clearChart(){
+			
+			function clearChart() {
 				if (chartInstance) {
 					chartInstance.destroy()
 					chartInstance = null
 					updateChartButton()
 				}
 			}
-			function clearFilter(){
+			
+			function clearFilter() {
 				activeFilter = 'all'
 				currentData = tempData
 				displayFilteredResults()
@@ -246,7 +252,7 @@
 				return async () => {
 					const serverId = $('#server').val()
 					const characterName = $('#character-name').val()
-					if(serverId === 'adven'){
+					if (serverId === 'adven') {
 						alert('미개발')
 						return
 					}
@@ -258,7 +264,7 @@
 					lastSearch = Date.now()
 					$('#search-btn').prop('disabled', true)
 					const {data} = await axios.get(`/api/servers/${serverId}/characters/${characterName}/timeline`)
-					if(Array.isArray(data) && data.length > 0){
+					if (Array.isArray(data) && data.length > 0) {
 						setTimeout(() => {
 							$('#search-btn').prop('disabled', false)
 						}, searchDelay)
@@ -297,8 +303,9 @@
 				}
 				renderRecentSearches()
 			})
+			
 			function saveRecentSearch(server, character) {
-				const entry = { server, character, timestamp: new Date().toISOString() }
+				const entry = {server, character, timestamp: new Date().toISOString()}
 				let searches = JSON.parse(localStorage.getItem('recentSearches') || '[]')
 				
 				// 중복 검사 및 최대 저장 수 제한
@@ -309,6 +316,7 @@
 				localStorage.setItem('recentSearches', JSON.stringify(searches))
 				renderRecentSearches()
 			}
+			
 			function renderRecentSearches() {
 				const searches = JSON.parse(localStorage.getItem('recentSearches') || '[]')
 				
@@ -348,8 +356,8 @@
 			}
 		</script>
 	</head>
-	<body class="bg-gray-50 min-h-screen">
-		<div class="container mx-auto px-4 py-8 max-w-4xl">
+	<body class="bg-gray-50 min-h-screen flex flex-col">
+		<div class="container mx-auto px-4 py-8 max-w-4xl flex-grow">
 			<div class="bg-white rounded-xl shadow-lg p-6 space-y-6 hover:shadow-xl transition-shadow">
 				<h1 onclick="getTaecho()" class="text-2xl font-bold text-gray-800 text-center cursor-pointer">태초줘</h1>
 				<div class="space-y-4">
@@ -391,8 +399,7 @@
 							<span class="text-sm font-medium text-gray-700">최근 검색 내역</span>
 							<button onclick="clearRecentSearches()" class="text-xs text-gray-500 hover:text-gray-700">전체 삭제</button>
 						</div>
-						<div id="recent-searches" class="bg-gray-50 p-2 rounded-lg space-y-1 max-h-40 overflow-y-auto border border-gray-200">
-						</div>
+						<div id="recent-searches" class="bg-gray-50 p-2 rounded-lg space-y-1 max-h-40 overflow-y-auto border border-gray-200"></div>
 					</div>
 					
 					<button onclick="searchTimeline()" id="search-btn" class="w-full bg-blue-600 text-white px-4 py-3 rounded-lg hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 disabled:opacity-50 disabled:cursor-not-allowed transition-all transform hover:scale-[1.01]">
@@ -402,17 +409,23 @@
 				
 				<div class="flex flex-col space-y-4">
 					<div class="flex justify-between items-center flex-wrap-mobile gap-mobile">
-						<div id="stats" class="flex flex-wrap gap-2">
-						</div>
+						<div id="stats" class="flex flex-wrap gap-2"></div>
 						<div class="flex flex-row gap-2">
 							<div id="clear-filter" class="button-sm"></div>
 							<div id="sort" class="button-sm"></div>
 							<div id="chart" class="button-sm"></div>
 						</div>
 					</div>
-					<div id="result" class="space-y-3">
-					</div>
+					<div id="result" class="space-y-3"></div>
 				</div>
+			</div>
 		</div>
+		<footer class="bg-white py-4 border-t border-gray-200">
+			<div class="container mx-auto px-4 flex justify-center">
+				<a href="https://developers.neople.co.kr" target="_blank">
+					<img src="/img/api_logo.png" alt="Neople 오픈 API" class="h-10" />
+				</a>
+			</div>
+		</footer>
 	</body>
 </html>
