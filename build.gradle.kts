@@ -31,7 +31,7 @@ tasks.processResources {
     dependsOn(tailwindCss)
 }
 
-group = "com.example"
+group = "com.taecho"
 version = "0.0.1-SNAPSHOT"
 sourceSets {
     main {
@@ -63,17 +63,31 @@ repositories {
 
 
 dependencies {
+    // default
     implementation("org.springframework.boot:spring-boot-starter-web")
     implementation("com.fasterxml.jackson.module:jackson-module-kotlin")
     implementation("org.jetbrains.kotlin:kotlin-reflect")
     testImplementation("org.springframework.boot:spring-boot-starter-test")
+
+    // test
     testImplementation("org.jetbrains.kotlin:kotlin-test-junit5")
     testRuntimeOnly("org.junit.platform:junit-platform-launcher")
+
+    // web
     implementation("org.springframework.boot:spring-boot-starter-thymeleaf")
     developmentOnly("org.springframework.boot:spring-boot-devtools")
+
+    // aop
     implementation("org.springframework:spring-aop")
     implementation("org.springframework:spring-aspects")
+
+    // actuator
     implementation("org.springframework.boot:spring-boot-starter-actuator:3.4.1")
+
+    // database
+    runtimeOnly("com.mysql:mysql-connector-j")
+    implementation("org.bgee.log4jdbc-log4j2:log4jdbc-log4j2-jdbc4.1:1.16")
+    implementation("org.springframework.boot:spring-boot-starter-data-jpa")
 //    implementation("org.springframework.boot:spring-boot-starter-security")
 //    testImplementation("org.springframework.security:spring-security-test")
 }

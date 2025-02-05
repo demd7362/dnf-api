@@ -1,4 +1,4 @@
-package xyz.taecho.dnfbackend
+package com.taecho.dnfbackend
 
 import org.junit.jupiter.api.Test
 import org.springframework.boot.test.context.SpringBootTest

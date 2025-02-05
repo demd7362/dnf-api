@@ -6,7 +6,7 @@ services:
     container_name: local_mysql
     environment:
       MYSQL_ROOT_PASSWORD: 1q2w3e4r!
-      MYSQL_DATABASE: local_db
+      MYSQL_DATABASE: DNF
       MYSQL_USER: jhjh
       MYSQL_PASSWORD: jhjh12
     volumes:

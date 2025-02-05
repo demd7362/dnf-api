@@ -13,7 +13,7 @@ import java.nio.file.Path
 @Configuration
 class AppConfig(private val objectMapper: ObjectMapper) {
     private val log = logger()
-    @Bean
+    @Bean("credentials")
     fun deserializeCredentials(): Credentials {
         val path: Path = when {
             SystemEnvironment.isWindows() -> Path.of("config.json") // 루트 디렉토리
