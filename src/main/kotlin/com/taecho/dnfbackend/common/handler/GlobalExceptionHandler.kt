@@ -1,6 +1,6 @@
-package com.example.dnfbackend.common.handler
+package com.taecho.dnfbackend.common.handler
 
-import com.example.dnfbackend.common.exception.ApiFailureException
+import com.taecho.dnfbackend.common.exception.ApiFailureException
 import org.springframework.http.ResponseEntity
 import org.springframework.web.bind.annotation.ExceptionHandler
 import org.springframework.web.bind.annotation.RestControllerAdvice

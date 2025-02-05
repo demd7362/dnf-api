@@ -1,4 +1,4 @@
-package com.example.dnfbackend.common.config
+package com.taecho.dnfbackend.common.config
 
 import com.fasterxml.jackson.annotation.JsonProperty
 

@@ -1,6 +1,6 @@
-package com.example.dnfbackend.common.aop
+package com.taecho.dnfbackend.common.aop
 
-import com.example.dnfbackend.common.exception.ApiFailureException
+import com.taecho.dnfbackend.common.exception.ApiFailureException
 import org.aspectj.lang.ProceedingJoinPoint
 import org.aspectj.lang.annotation.Around
 import org.aspectj.lang.annotation.Aspect
@@ -11,7 +11,7 @@ import org.springframework.stereotype.Component
 @Component
 class ApiErrorAspect {
 
-    @Pointcut("execution(* com.example.dnfbackend.api.service.DnfApiService.*(..))")
+    @Pointcut("execution(* com.taecho.dnfbackend.api.service.DnfApiService.*(..))")
     fun apiErrorPointcut() {
     }
 

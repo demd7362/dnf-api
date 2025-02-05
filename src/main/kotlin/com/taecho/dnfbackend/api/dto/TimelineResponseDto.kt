@@ -1,7 +1,4 @@
-package com.example.dnfbackend.api.dto
-
-import com.fasterxml.jackson.annotation.JsonIgnore
-import kotlin.reflect.jvm.internal.impl.load.kotlin.JvmType
+package com.taecho.dnfbackend.api.dto
 
 data class TimelineResponseDto(
     val adventureName: String,

@@ -1,8 +1,8 @@
-package com.example.dnfbackend.common.config
+package com.taecho.dnfbackend.common.config
 
-import com.example.dnfbackend.common.constant.Api
-import com.example.dnfbackend.common.utils.SystemEnvironment
-import com.example.dnfbackend.logger
+import com.taecho.dnfbackend.common.constant.Api
+import com.taecho.dnfbackend.common.utils.SystemEnvironment
+import com.taecho.dnfbackend.logger
 import com.fasterxml.jackson.databind.ObjectMapper
 import org.springframework.context.annotation.Bean
 import org.springframework.context.annotation.Configuration

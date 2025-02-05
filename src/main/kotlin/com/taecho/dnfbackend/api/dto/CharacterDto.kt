@@ -1,4 +1,4 @@
-package com.example.dnfbackend.api.dto
+package com.taecho.dnfbackend.api.dto
 
 
 data class CharacterDto (

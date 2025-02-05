@@ -1,11 +1,11 @@
-package com.example.dnfbackend.api.service
+package com.taecho.dnfbackend.api.service
 
-import com.example.dnfbackend.api.dto.ApiResponseDto
-import com.example.dnfbackend.api.dto.CharacterDto
-import com.example.dnfbackend.api.dto.TimelineResponseDto
-import com.example.dnfbackend.common.config.Credentials
-import com.example.dnfbackend.common.utils.DateUtils
-import com.example.dnfbackend.logger
+import com.taecho.dnfbackend.api.dto.ApiResponseDto
+import com.taecho.dnfbackend.api.dto.CharacterDto
+import com.taecho.dnfbackend.api.dto.TimelineResponseDto
+import com.taecho.dnfbackend.common.config.Credentials
+import com.taecho.dnfbackend.common.utils.DateUtils
+import com.taecho.dnfbackend.logger
 import org.springframework.core.ParameterizedTypeReference
 import org.springframework.stereotype.Service
 import org.springframework.web.client.RestClient
