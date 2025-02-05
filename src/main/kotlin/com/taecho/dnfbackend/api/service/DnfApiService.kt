@@ -22,7 +22,7 @@ class DnfApiService(private val restClient: RestClient,
             "달이 잠긴 호수",
             "꿈결 속 솔리다리스",
             "애쥬어 메인",
-            "죽음의 여신전",
+            "침묵의 성소", // 애쥬어 메인 아님
             "꿈결 속 흰 구름 계곡",
             "광포 : 크루얼 비스트",
             "광포 : 청해의 심장",
@@ -43,18 +43,28 @@ class DnfApiService(private val restClient: RestClient,
         }
         return result.rows[0] // 서버, 캐릭터 검색이므로 [0]
     }
-
-    fun searchTimeline(serverId: String, characterName: String): List<TimelineResponseDto.TimeLine.TimelineRow> {
-        val charactorDto = searchCharacter(serverId, characterName) ?: return emptyList()
-        val result = restClient.get()
-            .uri("/df/servers/$serverId/characters/${charactorDto.characterId}/timeline?apikey=${getApiKey()}&limit=100&code=505,513&start=2025-01-09 00:00&end=${DateUtils.getCurrentDate()}") // 던전 드랍, 카드 보상
-            .retrieve()
-            .body(TimelineResponseDto::class.java)
-        val filtered = result!!.timeline.rows.filter {
+    private fun filterTimeline(rawData: TimelineResponseDto):List<TimelineResponseDto.TimeLine.TimelineRow>{
+        return rawData.timeline.rows.filter {
             val isHell = it.code == 505 && it.data.dungeonName in HELL_DUNGEONS
             val isCard = it.code == 513 && it.data.dungeonName in CARD_DUNGEONS
             isCard || isHell
         }
+    }
+    fun searchTimeline(serverId: String, characterName: String): List<TimelineResponseDto.TimeLine.TimelineRow> {
+        val charactorDto = searchCharacter(serverId, characterName) ?: return emptyList()
+        var rawData = restClient.get()
+            .uri("/df/servers/$serverId/characters/${charactorDto.characterId}/timeline?apikey=${getApiKey()}&limit=100&code=505,513&start=2025-01-09 00:00&end=${DateUtils.getCurrentDate()}") // 던전 드랍, 카드 보상
+            .retrieve()
+            .body(TimelineResponseDto::class.java)!!
+        val filtered = filterTimeline(rawData).toMutableList()
+        while(rawData.timeline.next != null){
+            rawData = restClient.get()
+                .uri("/df/servers/$serverId/characters/${charactorDto.characterId}/timeline?apikey=${getApiKey()}&limit=100&code=505,513&start=2025-01-09 00:00&end=${DateUtils.getCurrentDate()}&next=${rawData.timeline.next}") // 던전 드랍, 카드 보상
+                .retrieve()
+                .body(TimelineResponseDto::class.java)!!
+            filtered += filterTimeline(rawData)
+        }
+
 
         return filtered
     }
