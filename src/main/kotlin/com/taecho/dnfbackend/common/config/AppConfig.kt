@@ -6,6 +6,7 @@ import com.taecho.dnfbackend.logger
 import com.fasterxml.jackson.databind.ObjectMapper
 import org.springframework.context.annotation.Bean
 import org.springframework.context.annotation.Configuration
+import org.springframework.context.annotation.Profile
 import org.springframework.web.client.RestClient
 import java.nio.file.Files
 import java.nio.file.Path
@@ -26,7 +27,8 @@ class AppConfig(private val objectMapper: ObjectMapper) {
     }
 
     @Bean
-    fun restClient(): RestClient {
+    @Profile("local")
+    fun logRestClient(): RestClient {
         return RestClient.builder()
             .baseUrl(Api.BASE_URL)
             .requestInterceptor { request, body, execution ->
@@ -37,6 +39,13 @@ class AppConfig(private val objectMapper: ObjectMapper) {
                 log.info("Response: ${response.statusCode} (${end - start}ms)")
                 response
             }
+            .build()
+    }
+    @Bean
+    @Profile("prod")
+    fun restClient(): RestClient {
+        return RestClient.builder()
+            .baseUrl(Api.BASE_URL)
             .build()
     }
     @Bean
