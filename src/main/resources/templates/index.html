@@ -259,12 +259,12 @@
 					if (!characterName || Date.now() - lastSearch < searchDelay) {
 						return
 					}
-					saveRecentSearch(serverId, characterName)
 					localStorage.setItem('characterName', characterName)
 					lastSearch = Date.now()
 					$('#search-btn').prop('disabled', true)
 					const {data} = await axios.get(`/api/servers/${serverId}/characters/${characterName}/timeline`)
 					if (Array.isArray(data) && data.length > 0) {
+						saveRecentSearch(serverId, characterName)
 						setTimeout(() => {
 							$('#search-btn').prop('disabled', false)
 						}, searchDelay)
