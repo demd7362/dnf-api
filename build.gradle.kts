@@ -6,6 +6,7 @@ plugins {
     id("org.springframework.boot") version "3.4.1"
     id("io.spring.dependency-management") version "1.1.7"
     id("com.github.node-gradle.node") version "7.0.1"
+    id("org.jetbrains.kotlin.plugin.jpa") version "1.9.20" // 모든 entity에 no arg constructor 생성
 }
 node {
     download = true
@@ -60,7 +61,11 @@ java {
 repositories {
     mavenCentral()
 }
-
+allOpen { // 기본적으로 final로 선언되는 클래스들을 런타임 프록시 생성을 위해 열어주기 위함
+    annotation("javax.persistence.Entity")
+    annotation("javax.persistence.MappedSuperclass")
+    annotation("javax.persistence.Embeddable")
+}
 
 dependencies {
     // default
