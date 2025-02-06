@@ -251,20 +251,22 @@
 				const searchDelay = 1000
 				return async () => {
 					const serverId = $('#server').val()
-					const characterName = $('#character-name').val()
-					if (serverId === 'adven') {
-						alert('미개발')
+					const searchValue = $('#character-name').val()
+					
+					if (!searchValue || Date.now() - lastSearch < searchDelay) {
 						return
 					}
-					if (!characterName || Date.now() - lastSearch < searchDelay) {
-						return
-					}
-					localStorage.setItem('characterName', characterName)
-					lastSearch = Date.now()
+					const url = serverId === 'adven'
+							? `/api/adventures/${searchValue}`
+							: `/api/servers/${serverId}/characters/${searchValue}/timeline`
 					$('#search-btn').prop('disabled', true)
-					const {data} = await axios.get(`/api/servers/${serverId}/characters/${characterName}/timeline`)
+					const {data} = await axios.get(url)
+					localStorage.setItem('characterName', searchValue)
+					lastSearch = Date.now()
+					
+					
 					if (Array.isArray(data) && data.length > 0) {
-						saveRecentSearch(serverId, characterName)
+						saveRecentSearch(serverId, searchValue)
 						setTimeout(() => {
 							$('#search-btn').prop('disabled', false)
 						}, searchDelay)
@@ -423,7 +425,7 @@
 		<footer class="bg-white py-4 border-t border-gray-200">
 			<div class="container mx-auto px-4 flex justify-center">
 				<a href="https://developers.neople.co.kr" target="_blank">
-					<img src="/img/api_logo.png" alt="Neople 오픈 API" class="h-10" />
+					<img src="/img/api_logo.png" alt="Neople 오픈 API" class="h-10"/>
 				</a>
 			</div>
 		</footer>
