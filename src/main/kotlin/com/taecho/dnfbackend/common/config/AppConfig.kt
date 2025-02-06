@@ -51,16 +51,18 @@ class AppConfig(private val objectMapper: ObjectMapper) {
     @Bean
     fun channels():List<String> {
         val channels = mutableListOf<String>()
-        for (i in 1..12) {
+        for (i in 101..118) {
             channels.add("벨 마이어 공국 $i")
-            channels.add("지벤 황국 $i")
-            channels.add("바하이트 $i")
             channels.add("백해 $i")
-            if(i <= 10){
+            if(i <= 112){
+                channels.add("지벤 황국 $i")
+                channels.add("바하이트 $i")
+            }
+            if(i <= 110){
                 channels.add("마계 $i")
             }
         }
-        for( i in 40 .. 60){
+        for( i in 140 .. 189){
             channels.add("중천 $i")
         }
         channels.shuffle()
