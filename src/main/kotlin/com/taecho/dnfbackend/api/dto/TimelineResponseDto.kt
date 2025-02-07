@@ -13,9 +13,9 @@ data class TimelineResponseDto(
     val jobName: String,
     val level: Int,
     val serverId: String,
-    val timeline: TimeLine
+    val timeline: Timeline
 ) {
-    data class TimeLine(
+    data class Timeline(
         val date: Date,
         val next: String?,
         val rows: List<TimelineRow>
@@ -24,13 +24,15 @@ data class TimelineResponseDto(
             val start: String,
             val end: String
         )
-        data class TimelineRow (
+
+        data class TimelineRow(
             val code: Int,
             val data: TimelineData,
             val date: String,
             val name: String,
+            var characterName: String?
         ) {
-            data class TimelineData (
+            data class TimelineData(
                 val channelName: String?,
                 val channelNo: Int?,
                 val dungeonName: String,

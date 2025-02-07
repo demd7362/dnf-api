@@ -38,11 +38,13 @@
 				'prey': '프레이',
 				'siroco': '시로코'
 			}
+			let serverId, searchValue
 			let tempData = []
 			let currentData = []
 			let activeFilter = 'all'
-			let sortAscending = true
+			let sortDescending = true
 			let chartInstance = null
+			
 			
 			function toggleChart() {
 				if (chartInstance) {
@@ -152,7 +154,7 @@
 			function updateSortButton() {
 				$('#sort').html(`
                 <button onclick="sortFilteredData()" class="px-3 py-1 text-sm font-medium rounded-full bg-purple-500 text-white hover:bg-purple-600 transition-colors">
-                    ${sortAscending ? '↓ 최신 순' : '↑ 오래된 순'}
+                    ${sortDescending ? '↓ 최신 순' : '↑ 오래된 순'}
                 </button>
             `)
 			}
@@ -166,8 +168,12 @@
 			}
 			
 			function sortFilteredData() {
-				sortAscending = !sortAscending
-				currentData = currentData.reverse() // fetched data는 항상 정렬되어있어서 reverse
+				sortDescending = !sortDescending
+				if (sortDescending) {
+					currentData.sort((a, b) => new Date(b.date) - new Date(a.date))
+				} else {
+					currentData.sort((a, b) => new Date(a.date) - new Date(b.date))
+				}
 				displayFilteredResults()
 			}
 			
@@ -214,7 +220,9 @@
           `)
 					return
 				}
-				const html = filteredData.reduce((acc, {code, data, date, name}) => {
+				const characters = new Set()
+				const html = filteredData.reduce((acc, {code, data, date, characterName, name}) => {
+					characters.add(characterName)
 					const buttonClass = buttonClassMap[data.itemRarity]
 					const channelInfo = data.channelName ? `${data.channelName} ${data.channelNo}` : '채널 정보 없음'
 					return acc + `
@@ -233,6 +241,7 @@
 		                </div>
 		                <span class="font-medium">${data.itemName}(${data.dungeonName})</span>
 		            </div>
+		            ${serverId === 'adven' ? `<span>${characterName}</span>` : ''}
 		            <span class="${buttonClass}">${data.itemRarity}</span>
 		        </div>
 		    `
@@ -240,7 +249,7 @@
 				
 				
 				$('#result').html(html)
-				$('#search-btn').text(`타임라인 검색(결과 ${filteredData.length}개 조회 완료)`)
+				$('#search-btn').text(`${[...characters].join(', ')} 결과 ${filteredData.length}개`)
 				updateSortButton()
 				updateChartButton()
 				createClearFilterButton()
@@ -250,8 +259,8 @@
 				let lastSearch = 0
 				const searchDelay = 1000
 				return async () => {
-					const serverId = $('#server').val()
-					const searchValue = $('#character-name').val()
+					serverId = $('#server').val()
+					searchValue = $('#character-name').val()
 					
 					if (!searchValue || Date.now() - lastSearch < searchDelay) {
 						return
@@ -261,6 +270,9 @@
 							: `/api/servers/${serverId}/characters/${searchValue}/timeline`
 					$('#search-btn').prop('disabled', true)
 					const {data} = await axios.get(url)
+					if (serverId === 'adven') {
+						data.sort((a, b) => new Date(b.date) - new Date(a.date))
+					}
 					localStorage.setItem('characterName', searchValue)
 					lastSearch = Date.now()
 					
@@ -342,6 +354,7 @@
 			function fillSearchFields(server, character) {
 				$('#server').val(server)
 				$('#character-name').val(character)
+				handleChangeServer({value: server})
 				searchTimeline()
 			}
 			
