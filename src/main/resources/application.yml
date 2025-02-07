@@ -6,10 +6,11 @@ server:
       force: true
 
 spring:
+  profiles:
+    active: local # gradle jar build 시 에러나서 추가
   jpa:
     hibernate:
       ddl-auto: update
-    show-sql: true
     generate-ddl: false
     open-in-view: false
     properties:
