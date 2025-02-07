@@ -51,7 +51,7 @@
 					chartInstance.destroy()
 					chartInstance = null
 					$('#chart-container').remove()
-					displayFilteredResults()
+					renderFilteredResults()
 				} else {
 					createChart()
 				}
@@ -174,12 +174,12 @@
 				} else {
 					currentData.sort((a, b) => new Date(a.date) - new Date(b.date))
 				}
-				displayFilteredResults()
+				renderFilteredResults()
 			}
 			
 			function filterByRarity(rarity) {
 				activeFilter = rarity
-				displayFilteredResults()
+				renderFilteredResults()
 				clearChart()
 				// updateStats 필요없음
 			}
@@ -195,22 +195,48 @@
 			function clearFilter() {
 				activeFilter = 'all'
 				currentData = tempData
-				displayFilteredResults()
+				renderFilteredResults()
 				clearChart()
-				updateStats()
 			}
 			
 			function filterByChannel(channelName) {
 				currentData = currentData.filter(item => item.data.channelName === channelName)
-				displayFilteredResults()
+				renderFilteredResults()
 				clearChart()
-				updateStats()
+			}
+			
+			
+			function filterCommonDungeons(self) {
+				const commonDungeons = new Set([
+					"적막의 회랑",
+					"별내림 숲",
+					"크루얼 비스트",
+					"청해의 심장",
+					"일렁이는 군도",
+					"길잡이 강"
+				])
+				if (self.checked) {
+					currentData = tempData
+				} else {
+					currentData = currentData.filter(item => !commonDungeons.has(item.data.dungeonName))
+				}
+				renderFilteredResults()
+			}
+			
+			function renderResultOptions(isAdventure) {
+				$('#result-options').html(`
+					<div class="flex gap-2">
+						<input id="filter-common-dungeons" onchange="filterCommonDungeons(this)" type="checkbox" checked/>
+						<label for="filter-common-dungeons">무빼노 포함</label>
+					</div>
+					${isAdventure ? `<button onclick="refreshAdventure()">모험단 새로고침</button>` : ''}
+				`)
 			}
 			
 			/**
 			 * fetch data, sort, rarity 조회
 			 */
-			function displayFilteredResults() {
+			function renderFilteredResults() {
 				const filteredData = activeFilter === 'all' ? currentData : currentData.filter(item => item.data.itemRarity === activeFilter)
 				if (filteredData.length === 0) {
 					$('#result').html(`
@@ -253,47 +279,10 @@
 				updateSortButton()
 				updateChartButton()
 				createClearFilterButton()
+				updateStats()
 			}
 			
-			const searchTimeline = (() => {
-				let lastSearch = 0
-				const searchDelay = 1000
-				return async () => {
-					serverId = $('#server').val()
-					searchValue = $('#character-name').val()
-					
-					if (!searchValue || Date.now() - lastSearch < searchDelay) {
-						return
-					}
-					const url = serverId === 'adven'
-							? `/api/adventures/${searchValue}`
-							: `/api/servers/${serverId}/characters/${searchValue}/timeline`
-					$('#search-btn').prop('disabled', true)
-					const {data} = await axios.get(url)
-					if (serverId === 'adven') {
-						data.sort((a, b) => new Date(b.date) - new Date(a.date))
-					}
-					localStorage.setItem('characterName', searchValue)
-					lastSearch = Date.now()
-					
-					
-					if (Array.isArray(data) && data.length > 0) {
-						saveRecentSearch(serverId, searchValue)
-						setTimeout(() => {
-							$('#search-btn').prop('disabled', false)
-						}, searchDelay)
-						currentData = data
-						tempData = data
-						updateStats()
-						displayFilteredResults()
-					} else {
-						alert('검색 결과가 없습니다.')
-						setTimeout(() => {
-							$('#search-btn').prop('disabled', false)
-						}, searchDelay)
-					}
-				}
-			})()
+			
 			
 			function handlePressEnter(event) {
 				if (event.keyCode === 13) {
@@ -311,7 +300,7 @@
 				if (server) {
 					$('#server').val(server)
 				}
-				const characterName = localStorage.getItem('characterName')
+				const characterName = localStorage.getItem('searchValue')
 				if (characterName) {
 					$('#character-name').val(characterName)
 				}
@@ -369,6 +358,79 @@
 				localStorage.removeItem('recentSearches')
 				renderRecentSearches()
 			}
+			const searchTimeline = (() => {
+				let lastSearch = 0
+				const searchDelay = 1000
+				return async () => {
+					const now = Date.now()
+					serverId = $('#server').val()
+					searchValue = $('#character-name').val()
+					if (!searchValue || now - lastSearch < searchDelay) {
+						return
+					}
+					
+					const url = serverId === 'adven'
+							? `/api/adventures/${searchValue}`
+							: `/api/servers/${serverId}/characters/${searchValue}/timeline`
+					$('#search-btn').prop('disabled', true)
+					const {data} = await axios.get(url)
+					if (serverId === 'adven') {
+						data.sort((a, b) => new Date(b.date) - new Date(a.date))
+					}
+					localStorage.setItem('searchValue', searchValue)
+					lastSearch = now
+					
+					
+					if (Array.isArray(data) && data.length > 0) {
+						saveRecentSearch(serverId, searchValue)
+						setTimeout(() => {
+							$('#search-btn').prop('disabled', false)
+						}, searchDelay)
+						currentData = data
+						tempData = data
+						renderFilteredResults()
+						renderResultOptions(serverId === 'adven')
+					} else {
+						alert('검색 결과가 없습니다.')
+						setTimeout(() => {
+							$('#search-btn').prop('disabled', false)
+						}, searchDelay)
+					}
+				}
+			})()
+			
+			const refreshAdventure = (() => {
+				let lastSearch = 0
+				const searchDelay = 1000
+				return async () => {
+					const now = Date.now()
+					if (now - lastSearch < searchDelay) {
+						return
+					}
+					$('#search-btn').prop('disabled', true)
+					$('#result-options').hide()
+					const {data} = await axios.get(`/api/adventures/${searchValue}/refresh`)
+					data.sort((a,b) => new Date(b.date) - new Date(a.date))
+					lastSearch = now
+					if (Array.isArray(data) && data.length > 0) {
+						setTimeout(() => {
+							$('#search-btn').prop('disabled', false)
+							$('#result-options').show()
+						}, searchDelay)
+						currentData = data
+						tempData = data
+						renderFilteredResults()
+					} else {
+						alert('검색 결과가 없습니다.')
+						setTimeout(() => {
+							$('#search-btn').prop('disabled', false)
+							$('#result-options').show()
+						}, searchDelay)
+					}
+				}
+				
+			})()
+			
 		</script>
 	</head>
 	<body class="bg-gray-50 min-h-screen flex flex-col">
@@ -416,7 +478,9 @@
 						</div>
 						<div id="recent-searches" class="bg-gray-50 p-2 rounded-lg space-y-1 max-h-40 overflow-y-auto border border-gray-200"></div>
 					</div>
+					<div id="result-options" class="flex justify-center mx-auto gap-2">
 					
+					</div>
 					<button onclick="searchTimeline()" id="search-btn" class="w-full bg-blue-600 text-white px-4 py-3 rounded-lg hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 disabled:opacity-50 disabled:cursor-not-allowed transition-all transform hover:scale-[1.01]">
 						타임라인 검색
 					</button>

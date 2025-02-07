@@ -4,6 +4,7 @@ import com.fasterxml.jackson.databind.ObjectMapper
 import com.fasterxml.jackson.module.kotlin.readValue
 import com.taecho.dnfbackend.api.dto.ApiResponseDto
 import com.taecho.dnfbackend.api.dto.CharacterDto
+import com.taecho.dnfbackend.api.dto.CharacterServerDto
 import com.taecho.dnfbackend.api.dto.TimelineResponseDto
 import com.taecho.dnfbackend.api.entity.Timeline
 import com.taecho.dnfbackend.api.repository.TimelineRepository
@@ -37,7 +38,16 @@ class DnfApiService(
             "광포 : 크루얼 비스트",
             "광포 : 청해의 심장",
             "모독 : 일렁이는 군도",
-            "환란 : 길잡이 강" // TODO 베누스 레기온
+            "환란 : 길잡이 강",
+            // TODO 베누스 레기온
+        )
+        private val COMMON_DUNGEON = setOf(
+            "적막의 회랑",
+            "별내림 숲",
+            "크루얼 비스트",
+            "청해의 심장",
+            "일렁이는 군도",
+            "길잡이 강",
         )
         private val HELL_DUNGEONS = setOf("종말의 숭배자", "심연 : 종말의 숭배자")
     }
@@ -60,20 +70,28 @@ class DnfApiService(
         return rawData.timeline.rows.fold(emptyList()) { acc: List<TimelineResponseDto.Timeline.TimelineRow>, row ->
             val isHell = row.code == 505 && row.data.dungeonName in HELL_DUNGEONS
             val isCard = row.code == 513 && row.data.dungeonName in CARD_DUNGEONS
+            val isBossDrop = row.code == 505 && row.data.dungeonName in COMMON_DUNGEON
             row.characterName = rawData.characterName
-            if (isCard || isHell) acc + listOf(row) else acc
+            if (isCard || isHell || isBossDrop) acc + listOf(row) else acc
         }
     }
 
-    fun refreshTimeline(serverId: String, characterName: String) {
-
+    fun refreshAdventureCharactersTimeline(adventureName: String): List<TimelineResponseDto.Timeline.TimelineRow> {
+        val characterServers: List<CharacterServerDto> =
+            timelineRepository.findCharacterServerByAdventureName(adventureName)
+        val filteredTimeline: MutableList<TimelineResponseDto.Timeline.TimelineRow> = mutableListOf()
+        for (characterServer in characterServers) {
+            filteredTimeline += searchTimeline(characterServer.server, characterServer.characterName)
+        }
+        return filteredTimeline
     }
 
-    fun searchAdventureTimelines(adventureName: String):List<TimelineResponseDto.Timeline.TimelineRow> {
+    fun searchAdventureTimelines(adventureName: String): List<TimelineResponseDto.Timeline.TimelineRow> {
         val timelines = timelineRepository.findAllByAdventureName(adventureName)
         val filteredTimelines = mutableListOf<TimelineResponseDto.Timeline.TimelineRow>()
-        for(timeline in timelines) {
-            val deserializedTimelines = objectMapper.readValue<List<TimelineResponseDto.Timeline.TimelineRow>>(timeline.filteredTimeline)
+        for (timeline in timelines) {
+            val deserializedTimelines =
+                objectMapper.readValue<List<TimelineResponseDto.Timeline.TimelineRow>>(timeline.filteredTimeline)
             filteredTimelines += deserializedTimelines
         }
         return filteredTimelines
@@ -94,7 +112,8 @@ class DnfApiService(
             .uri("/df/servers/$serverId/characters/${charactorDto.characterId}/timeline?apikey=${getApiKey()}&limit=100&code=505,513&start=2025-01-09 00:00&end=${DateUtils.getCurrentDate()}") // 던전 드랍, 카드 보상
             .retrieve()
             .body(TimelineResponseDto::class.java)!!
-        val filteredTimeline: MutableList<TimelineResponseDto.Timeline.TimelineRow> = filterTimeline(rawData).toMutableList()
+        val filteredTimeline: MutableList<TimelineResponseDto.Timeline.TimelineRow> =
+            filterTimeline(rawData).toMutableList()
 
         while (rawData.timeline.next != null) {
             rawData = restClient.get()
