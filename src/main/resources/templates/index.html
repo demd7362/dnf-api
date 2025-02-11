@@ -276,6 +276,7 @@
 				
 				$('#result').html(html)
 				$('#search-btn').text(`${[...characters].join(', ')} 결과 ${filteredData.length}개`)
+				clearChart()
 				updateSortButton()
 				updateChartButton()
 				createClearFilterButton()
