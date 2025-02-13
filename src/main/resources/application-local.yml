@@ -1,5 +1,15 @@
 spring:
   jpa:
+    hibernate:
+      ddl-auto: update
+    generate-ddl: false
+    open-in-view: false
+    properties:
+      hibernate:
+        globally_quoted_identifiers: true
+        globally_quoted_identifiers_skip_column_definitions: true
+        format_sql: true
+        use_sql_comments: true # /* insert your.package.YourEntity */ INSERT INTO your_table (column1, column2) VALUES (?, ?)
     show-sql: true
   devtools:
     restart:

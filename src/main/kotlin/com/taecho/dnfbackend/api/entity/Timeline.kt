@@ -12,6 +12,10 @@ class Timeline(
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     var id: Long? = null,
 
+    @Column(name = "character_id", unique = true)
+    @Comment("캐릭터 unique key")
+    var characterId: String,
+
     @Column(nullable = false)
     @Comment("서버명")
     var server: String,

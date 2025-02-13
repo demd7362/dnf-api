@@ -11,6 +11,7 @@ import com.taecho.dnfbackend.api.repository.TimelineRepository
 import com.taecho.dnfbackend.common.config.Credentials
 import com.taecho.dnfbackend.common.utils.DateUtils
 import com.taecho.dnfbackend.logger
+import jakarta.annotation.PostConstruct
 import org.springframework.core.ParameterizedTypeReference
 import org.springframework.stereotype.Service
 import org.springframework.web.client.RestClient
@@ -51,6 +52,17 @@ class DnfApiService(
         )
         private val HELL_DUNGEONS = setOf("종말의 숭배자", "심연 : 종말의 숭배자")
     }
+    init {
+        val nonIdTimelines = timelineRepository.findAllByCharacterIdStartsWith("added")
+        for(timeline:Timeline in nonIdTimelines){
+            val characterDto = searchCharacter(timeline.server, timeline.characterName)
+            characterDto?.characterId?.also {
+                timeline.characterId = characterDto.characterId
+            }
+            timelineRepository.save(timeline)
+        }
+
+    }
 
     private fun getApiKey(): String = crendentials.apiKey
 
@@ -62,6 +74,7 @@ class DnfApiService(
         if (result!!.rows.isEmpty()) {
             return null
         }
+
         return result.rows[0] // 서버, 캐릭터 검색이므로 [0]
     }
 
@@ -99,7 +112,7 @@ class DnfApiService(
 
     fun searchTimeline(serverId: String, characterName: String): List<TimelineResponseDto.Timeline.TimelineRow> {
         val charactorDto = searchCharacter(serverId, characterName) ?: return emptyList()
-        val timeline: Timeline? = timelineRepository.findTopByServerAndCharacterName(serverId, characterName)
+        val timeline: Timeline? = timelineRepository.findTopByCharacterId(charactorDto.characterId)
 //        if (timeline != null) { // 검색할때마다 db에 있는걸 꺼내와야할 이유가? 바로바로 보여주는게 맞다
 //            val lastUpdatedAt = timeline.updatedAt
 //            val now = LocalDateTime.now()
@@ -128,10 +141,13 @@ class DnfApiService(
                 characterName = characterName,
                 adventureName = rawData.adventureName,
                 filteredTimeline = objectMapper.writeValueAsString(filteredTimeline),
+                characterId = rawData.characterId
             )
         } else {
             timeline.filteredTimeline = objectMapper.writeValueAsString(filteredTimeline)
             timeline.updatedAt = LocalDateTime.now()
+            timeline.characterName = rawData.characterName
+            timeline.adventureName = rawData.adventureName
             timeline
         }
         timelineRepository.save(newTimeline)
