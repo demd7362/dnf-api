@@ -52,17 +52,6 @@ class DnfApiService(
         )
         private val HELL_DUNGEONS = setOf("종말의 숭배자", "심연 : 종말의 숭배자")
     }
-    init {
-        val nonIdTimelines = timelineRepository.findAllByCharacterIdStartsWith("added")
-        for(timeline:Timeline in nonIdTimelines){
-            val characterDto = searchCharacter(timeline.server, timeline.characterName)
-            characterDto?.characterId?.also {
-                timeline.characterId = characterDto.characterId
-            }
-            timelineRepository.save(timeline)
-        }
-
-    }
 
     private fun getApiKey(): String = crendentials.apiKey
 
