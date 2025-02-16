@@ -11,7 +11,6 @@ class Timeline(
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     var id: Long? = null,
-
     @Column(name = "character_id", unique = true)
     @Comment("캐릭터 unique key")
     var characterId: String,
@@ -19,7 +18,8 @@ class Timeline(
     @Column(nullable = false)
     @Comment("서버명")
     var server: String,
-    @Column(nullable = false)
+
+    @Column(name = "character_name", nullable = false)
     @Comment("캐릭터명")
     var characterName: String,
 
@@ -33,5 +33,11 @@ class Timeline(
 
     @Column(name = "updated_at", nullable = false)
     @Comment("마지막 갱신 일자")
-    var updatedAt: LocalDateTime = LocalDateTime.now()
+    var updatedAt: LocalDateTime = LocalDateTime.now(),
+
+
+    @OneToOne
+    @JoinColumn(name = "timeline_statistics_id")
+    @Comment("타임라인 통계 FK")
+    var timelineStatistics: TimelineStatistics? = null
 )
