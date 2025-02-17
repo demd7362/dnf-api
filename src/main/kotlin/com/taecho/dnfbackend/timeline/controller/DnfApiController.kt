@@ -1,6 +1,6 @@
-package com.taecho.dnfbackend.api.controller
+package com.taecho.dnfbackend.timeline.controller
 
-import com.taecho.dnfbackend.api.service.DnfApiService
+import com.taecho.dnfbackend.timeline.service.DnfApiService
 import org.springframework.http.ResponseEntity
 import org.springframework.web.bind.annotation.GetMapping
 import org.springframework.web.bind.annotation.PathVariable

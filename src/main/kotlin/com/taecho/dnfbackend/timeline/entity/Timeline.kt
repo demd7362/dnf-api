@@ -1,4 +1,4 @@
-package com.taecho.dnfbackend.api.entity
+package com.taecho.dnfbackend.timeline.entity
 
 import jakarta.persistence.*
 import org.hibernate.annotations.Comment

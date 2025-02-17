@@ -1,14 +1,18 @@
-package com.taecho.dnfbackend.api.service
+package com.taecho.dnfbackend.timeline.service
 
 import com.fasterxml.jackson.databind.ObjectMapper
 import com.fasterxml.jackson.module.kotlin.readValue
-import com.taecho.dnfbackend.api.dto.*
-import com.taecho.dnfbackend.api.entity.Timeline
-import com.taecho.dnfbackend.api.entity.TimelineStatistics
-import com.taecho.dnfbackend.api.repository.TimelineRepository
 import com.taecho.dnfbackend.common.config.Credentials
 import com.taecho.dnfbackend.common.utils.DateUtils
 import com.taecho.dnfbackend.logger
+import com.taecho.dnfbackend.timeline.dto.*
+import com.taecho.dnfbackend.timeline.entity.Timeline
+import com.taecho.dnfbackend.timeline.entity.TimelineStatistics
+import com.taecho.dnfbackend.timeline.repository.TimelineRepository
+import com.taecho.dnfbackend.timeline.repository.TimelineStatisticsRepository
+import com.taecho.dnfbackend.timeline.response.ApiResponse
+import com.taecho.dnfbackend.timeline.response.ChannelFrequencyResponse
+import com.taecho.dnfbackend.timeline.response.TimelineResponse
 import org.springframework.core.ParameterizedTypeReference
 import org.springframework.stereotype.Service
 import org.springframework.web.client.RestClient
@@ -20,7 +24,8 @@ class DnfApiService(
     private val channels: List<String>,
     private val crendentials: Credentials,
     private val timelineRepository: TimelineRepository,
-    private val objectMapper: ObjectMapper
+    private val objectMapper: ObjectMapper,
+    private val timelineStatisticsRepository: TimelineStatisticsRepository
 ) {
     private final val log = logger()
 
@@ -56,7 +61,7 @@ class DnfApiService(
         val result = restClient.get()
             .uri("/df/servers/$serverId/characters?characterName=$characterName&apikey=${getApiKey()}")
             .retrieve()
-            .body(object : ParameterizedTypeReference<ApiResponseDto<CharacterDto>>() {})
+            .body(object : ParameterizedTypeReference<ApiResponse<CharacterDto>>() {})
         if (result!!.rows.isEmpty()) {
             return null
         }
@@ -64,9 +69,9 @@ class DnfApiService(
         return result.rows[0] // 서버, 캐릭터 검색이므로 [0]
     }
 
-    private fun filterTimeline(rawData: TimelineResponseDto): List<TimelineResponseDto.Timeline.TimelineRow> {
+    private fun filterTimeline(rawData: TimelineResponse): List<TimelineResponse.Timeline.TimelineRow> {
         // filtering + characterName 추가
-        return rawData.timeline.rows.fold(emptyList()) { acc: List<TimelineResponseDto.Timeline.TimelineRow>, row ->
+        return rawData.timeline.rows.fold(emptyList()) { acc: List<TimelineResponse.Timeline.TimelineRow>, row ->
             val isHell = row.code == 505 && row.data.dungeonName in HELL_DUNGEONS
             val isCard = row.code == 513 && row.data.dungeonName in CARD_DUNGEONS
             val isBossDrop = row.code == 505 && row.data.dungeonName in COMMON_DUNGEON
@@ -75,7 +80,7 @@ class DnfApiService(
         }
     }
 
-    private fun countMostChannels(filteredTimelines: List<TimelineResponseDto.Timeline.TimelineRow>): MostChannelsDto {
+    private fun countMostChannels(filteredTimelines: List<TimelineResponse.Timeline.TimelineRow>): MostChannelsDto {
         val taechoCounter = mutableMapOf<String, Int>()
         val epicCounter = mutableMapOf<String, Int>()
         val legendaryCounter = mutableMapOf<String, Int>()
@@ -86,7 +91,8 @@ class DnfApiService(
                 "레전더리" -> legendaryCounter
                 else -> continue
             }
-            val channel = "${filteredTimeline.data.channelName ?: continue} ${filteredTimeline.data.channelNo ?: continue}"
+            val channel =
+                "${filteredTimeline.data.channelName ?: continue} ${filteredTimeline.data.channelNo ?: continue}"
             counter[channel] = (counter[channel] ?: 0) + 1
         }
         return MostChannelsDto(
@@ -96,28 +102,28 @@ class DnfApiService(
         )
     }
 
-    fun refreshAdventureCharactersTimeline(adventureName: String): List<TimelineResponseDto.Timeline.TimelineRow> {
+    fun refreshAdventureCharactersTimeline(adventureName: String): List<TimelineResponse.Timeline.TimelineRow> {
         val characterServers: List<CharacterServerDto> =
             timelineRepository.findCharacterServerByAdventureName(adventureName)
-        val filteredTimelines: MutableList<TimelineResponseDto.Timeline.TimelineRow> = mutableListOf()
+        val filteredTimelines: MutableList<TimelineResponse.Timeline.TimelineRow> = mutableListOf()
         for (characterServer in characterServers) {
             filteredTimelines += searchTimeline(characterServer.server, characterServer.characterName)
         }
         return filteredTimelines
     }
 
-    fun searchAdventureTimelines(adventureName: String): List<TimelineResponseDto.Timeline.TimelineRow> {
+    fun searchAdventureTimelines(adventureName: String): List<TimelineResponse.Timeline.TimelineRow> {
         val timelines = timelineRepository.findAllByAdventureName(adventureName)
-        val filteredTimelines = mutableListOf<TimelineResponseDto.Timeline.TimelineRow>()
+        val filteredTimelines = mutableListOf<TimelineResponse.Timeline.TimelineRow>()
         for (timeline in timelines) {
             val deserializedTimelines =
-                objectMapper.readValue<List<TimelineResponseDto.Timeline.TimelineRow>>(timeline.filteredTimeline)
+                objectMapper.readValue<List<TimelineResponse.Timeline.TimelineRow>>(timeline.filteredTimeline)
             filteredTimelines += deserializedTimelines
         }
         return filteredTimelines
     }
 
-    fun searchTimeline(serverId: String, characterName: String): List<TimelineResponseDto.Timeline.TimelineRow> {
+    fun searchTimeline(serverId: String, characterName: String): List<TimelineResponse.Timeline.TimelineRow> {
         val charactorDto = searchCharacter(serverId, characterName) ?: return emptyList()
         val timeline: Timeline? = timelineRepository.findTopByCharacterId(charactorDto.characterId)
 //        if (timeline != null) { // 검색할때마다 db에 있는걸 꺼내와야할 이유가? 바로바로 보여주는게 맞다
@@ -131,15 +137,15 @@ class DnfApiService(
         var rawData = restClient.get()
             .uri("/df/servers/$serverId/characters/${charactorDto.characterId}/timeline?apikey=${getApiKey()}&limit=100&code=505,513&startDate=2025-01-09 00:00&endDate=${DateUtils.getCurrentDate()}") // 던전 드랍, 카드 보상
             .retrieve()
-            .body(TimelineResponseDto::class.java)!!
-        val filteredTimelines: MutableList<TimelineResponseDto.Timeline.TimelineRow> =
+            .body(TimelineResponse::class.java)!!
+        val filteredTimelines: MutableList<TimelineResponse.Timeline.TimelineRow> =
             filterTimeline(rawData).toMutableList()
 
         while (rawData.timeline.next != null) {
             rawData = restClient.get()
                 .uri("/df/servers/$serverId/characters/${charactorDto.characterId}/timeline?apikey=${getApiKey()}&limit=100&code=505,513&startDate=2025-01-09 00:00&endDate=${DateUtils.getCurrentDate()}&next=${rawData.timeline.next}") // 던전 드랍, 카드 보상
                 .retrieve()
-                .body(TimelineResponseDto::class.java)!!
+                .body(TimelineResponse::class.java)!!
             filteredTimelines += filterTimeline(rawData)
         }
         val newTimeline = if (timeline == null) {
@@ -157,6 +163,8 @@ class DnfApiService(
             timeline.adventureName = rawData.adventureName
             timeline
         }
+
+        // timeline_statistics에 레어리티별 가장 많이 먹은 채널 추가
         val mostChannelsDto = countMostChannels(filteredTimelines)
         newTimeline.timelineStatistics = TimelineStatistics(
             id = timeline?.timelineStatistics?.id,
@@ -172,6 +180,17 @@ class DnfApiService(
 
     fun randomChannel(): String {
         return channels.random()
+    }
+
+    fun getChannelFrequencies(): ChannelFrequencyResponse {
+        val taechoFrequency = timelineStatisticsRepository.countFrequencyByTaechoChannel()
+        val epicFrequency = timelineStatisticsRepository.countFrequencyByEpicChannel()
+        val legendaryFrequency = timelineStatisticsRepository.countFrequencyByLegendaryChannel()
+        return ChannelFrequencyResponse(
+            taecho = taechoFrequency,
+            epic = epicFrequency,
+            legendary = legendaryFrequency
+        )
     }
 
 }

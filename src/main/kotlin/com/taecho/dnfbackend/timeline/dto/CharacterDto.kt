@@ -1,4 +1,4 @@
-package com.taecho.dnfbackend.api.dto
+package com.taecho.dnfbackend.timeline.dto
 
 
 data class CharacterDto (

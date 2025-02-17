@@ -1,6 +1,6 @@
-package com.taecho.dnfbackend.api.dto
+package com.taecho.dnfbackend.timeline.response
 
-data class TimelineResponseDto(
+data class TimelineResponse(
     val adventureName: String,
     val characterId: String,
     val characterName: String,

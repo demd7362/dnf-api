@@ -11,7 +11,7 @@ import org.springframework.stereotype.Component
 @Component
 class ApiErrorAspect {
 
-    @Pointcut("execution(* com.taecho.dnfbackend.api.service.DnfApiService.*(..))")
+    @Pointcut("execution(* com.taecho.dnfbackend.timeline.service.DnfApiService.*(..))")
     fun apiErrorPointcut() {
     }
 
