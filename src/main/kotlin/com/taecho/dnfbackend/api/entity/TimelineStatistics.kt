@@ -8,7 +8,7 @@ import org.hibernate.annotations.Comment
 class TimelineStatistics (
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
-    var id: Long,
+    var id: Long? = null,
 
     @Column(name = "most_taecho_channel")
     @Comment("가장 태초 많이 먹은 채널")

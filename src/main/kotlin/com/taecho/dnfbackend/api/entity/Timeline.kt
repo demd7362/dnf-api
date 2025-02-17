@@ -36,7 +36,7 @@ class Timeline(
     var updatedAt: LocalDateTime = LocalDateTime.now(),
 
 
-    @OneToOne
+    @OneToOne(orphanRemoval = true, cascade = [CascadeType.PERSIST, CascadeType.MERGE, CascadeType.REMOVE])
     @JoinColumn(name = "timeline_statistics_id")
     @Comment("타임라인 통계 FK")
     var timelineStatistics: TimelineStatistics? = null

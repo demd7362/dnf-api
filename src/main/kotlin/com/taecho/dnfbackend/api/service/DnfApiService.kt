@@ -2,16 +2,13 @@ package com.taecho.dnfbackend.api.service
 
 import com.fasterxml.jackson.databind.ObjectMapper
 import com.fasterxml.jackson.module.kotlin.readValue
-import com.taecho.dnfbackend.api.dto.ApiResponseDto
-import com.taecho.dnfbackend.api.dto.CharacterDto
-import com.taecho.dnfbackend.api.dto.CharacterServerDto
-import com.taecho.dnfbackend.api.dto.TimelineResponseDto
+import com.taecho.dnfbackend.api.dto.*
 import com.taecho.dnfbackend.api.entity.Timeline
+import com.taecho.dnfbackend.api.entity.TimelineStatistics
 import com.taecho.dnfbackend.api.repository.TimelineRepository
 import com.taecho.dnfbackend.common.config.Credentials
 import com.taecho.dnfbackend.common.utils.DateUtils
 import com.taecho.dnfbackend.logger
-import jakarta.annotation.PostConstruct
 import org.springframework.core.ParameterizedTypeReference
 import org.springframework.stereotype.Service
 import org.springframework.web.client.RestClient
@@ -78,14 +75,35 @@ class DnfApiService(
         }
     }
 
+    private fun countMostChannels(filteredTimelines: List<TimelineResponseDto.Timeline.TimelineRow>): MostChannelsDto {
+        val taechoCounter = mutableMapOf<String, Int>()
+        val epicCounter = mutableMapOf<String, Int>()
+        val legendaryCounter = mutableMapOf<String, Int>()
+        for (filteredTimeline in filteredTimelines) {
+            val counter = when (filteredTimeline.data.itemRarity) {
+                "태초" -> taechoCounter
+                "에픽" -> epicCounter
+                "레전더리" -> legendaryCounter
+                else -> continue
+            }
+            val channel = "${filteredTimeline.data.channelName ?: continue} ${filteredTimeline.data.channelNo ?: continue}"
+            counter[channel] = (counter[channel] ?: 0) + 1
+        }
+        return MostChannelsDto(
+            mostTaechoChannel = taechoCounter.maxByOrNull { it.value }?.key,
+            mostEpicChannel = epicCounter.maxByOrNull { it.value }?.key,
+            mostLegendaryChannel = legendaryCounter.maxByOrNull { it.value }?.key
+        )
+    }
+
     fun refreshAdventureCharactersTimeline(adventureName: String): List<TimelineResponseDto.Timeline.TimelineRow> {
         val characterServers: List<CharacterServerDto> =
             timelineRepository.findCharacterServerByAdventureName(adventureName)
-        val filteredTimeline: MutableList<TimelineResponseDto.Timeline.TimelineRow> = mutableListOf()
+        val filteredTimelines: MutableList<TimelineResponseDto.Timeline.TimelineRow> = mutableListOf()
         for (characterServer in characterServers) {
-            filteredTimeline += searchTimeline(characterServer.server, characterServer.characterName)
+            filteredTimelines += searchTimeline(characterServer.server, characterServer.characterName)
         }
-        return filteredTimeline
+        return filteredTimelines
     }
 
     fun searchAdventureTimelines(adventureName: String): List<TimelineResponseDto.Timeline.TimelineRow> {
@@ -111,38 +129,45 @@ class DnfApiService(
 //            }
 //        }
         var rawData = restClient.get()
-            .uri("/df/servers/$serverId/characters/${charactorDto.characterId}/timeline?apikey=${getApiKey()}&limit=100&code=505,513&start=2025-01-09 00:00&end=${DateUtils.getCurrentDate()}") // 던전 드랍, 카드 보상
+            .uri("/df/servers/$serverId/characters/${charactorDto.characterId}/timeline?apikey=${getApiKey()}&limit=100&code=505,513&startDate=2025-01-09 00:00&endDate=${DateUtils.getCurrentDate()}") // 던전 드랍, 카드 보상
             .retrieve()
             .body(TimelineResponseDto::class.java)!!
-        val filteredTimeline: MutableList<TimelineResponseDto.Timeline.TimelineRow> =
+        val filteredTimelines: MutableList<TimelineResponseDto.Timeline.TimelineRow> =
             filterTimeline(rawData).toMutableList()
 
         while (rawData.timeline.next != null) {
             rawData = restClient.get()
-                .uri("/df/servers/$serverId/characters/${charactorDto.characterId}/timeline?apikey=${getApiKey()}&limit=100&code=505,513&start=2025-01-09 00:00&end=${DateUtils.getCurrentDate()}&next=${rawData.timeline.next}") // 던전 드랍, 카드 보상
+                .uri("/df/servers/$serverId/characters/${charactorDto.characterId}/timeline?apikey=${getApiKey()}&limit=100&code=505,513&startDate=2025-01-09 00:00&endDate=${DateUtils.getCurrentDate()}&next=${rawData.timeline.next}") // 던전 드랍, 카드 보상
                 .retrieve()
                 .body(TimelineResponseDto::class.java)!!
-            filteredTimeline += filterTimeline(rawData)
+            filteredTimelines += filterTimeline(rawData)
         }
         val newTimeline = if (timeline == null) {
             Timeline(
                 server = serverId,
                 characterName = characterName,
                 adventureName = rawData.adventureName,
-                filteredTimeline = objectMapper.writeValueAsString(filteredTimeline),
+                filteredTimeline = objectMapper.writeValueAsString(filteredTimelines),
                 characterId = rawData.characterId
             )
         } else {
-            timeline.filteredTimeline = objectMapper.writeValueAsString(filteredTimeline)
+            timeline.filteredTimeline = objectMapper.writeValueAsString(filteredTimelines)
             timeline.updatedAt = LocalDateTime.now()
             timeline.characterName = rawData.characterName
             timeline.adventureName = rawData.adventureName
             timeline
         }
+        val mostChannelsDto = countMostChannels(filteredTimelines)
+        newTimeline.timelineStatistics = TimelineStatistics(
+            id = timeline?.timelineStatistics?.id,
+            mostTaechoChannel = mostChannelsDto.mostTaechoChannel,
+            mostEpicChannel = mostChannelsDto.mostEpicChannel,
+            mostLegendaryChannel = mostChannelsDto.mostLegendaryChannel
+        )
         timelineRepository.save(newTimeline)
 
 
-        return filteredTimeline
+        return filteredTimelines
     }
 
     fun randomChannel(): String {
