@@ -15,7 +15,7 @@ class UserReferersService(private val userReferersRepository: UserReferersReposi
     fun saveReferer(){
         val referer = HttpUtils.getReferer()
         val ip = HttpUtils.getClientIp()
-        if(referer == null || ip.isNullOrEmpty()){
+        if(ip.isNullOrEmpty()){
             return
         }
         val entity = UserReferers(
