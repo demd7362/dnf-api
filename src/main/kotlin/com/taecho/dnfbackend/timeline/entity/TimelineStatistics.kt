@@ -8,17 +8,17 @@ import org.hibernate.annotations.Comment
 class TimelineStatistics (
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
-    var id: Long? = null,
+    val id: Long? = null,
 
-    @Column(name = "most_taecho_channel")
+    @Column(name = "most_taecho_channel", columnDefinition = "VARCHAR(20)")
     @Comment("가장 태초 많이 먹은 채널")
     var mostTaechoChannel: String? = null,
 
-    @Column(name = "most_epic_channel")
+    @Column(name = "most_epic_channel", columnDefinition = "VARCHAR(20)")
     @Comment("가장 에픽 많이 먹은 채널")
     var mostEpicChannel: String? = null,
 
-    @Column(name = "most_legendary_channel")
+    @Column(name = "most_legendary_channel", columnDefinition = "VARCHAR(20)")
     @Comment("가장 레전더리 많이 먹은 채널")
     var mostLegendaryChannel: String? = null
 )

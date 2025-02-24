@@ -10,20 +10,20 @@ import java.time.LocalDateTime
 class Timeline(
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
-    var id: Long? = null,
-    @Column(name = "character_id", unique = true)
+    val id: Long? = null,
+    @Column(name = "character_id", unique = true, columnDefinition = "VARCHAR(100)")
     @Comment("캐릭터 unique key")
     var characterId: String,
 
-    @Column(nullable = false)
+    @Column(nullable = false, columnDefinition = "VARCHAR(10)")
     @Comment("서버명")
     var server: String,
 
-    @Column(name = "character_name", nullable = false)
+    @Column(name = "character_name", nullable = false, columnDefinition = "VARCHAR(20)")
     @Comment("캐릭터명")
     var characterName: String,
 
-    @Column(name = "adventure_name", nullable = false)
+    @Column(name = "adventure_name", nullable = false, columnDefinition = "VARCHAR(20)")
     @Comment("모험단명")
     var adventureName: String,
 
@@ -36,7 +36,11 @@ class Timeline(
     var updatedAt: LocalDateTime = LocalDateTime.now(),
 
 
-    @OneToOne(orphanRemoval = true, cascade = [CascadeType.PERSIST, CascadeType.MERGE, CascadeType.REMOVE])
+    @OneToOne(
+        fetch = FetchType.LAZY,
+        orphanRemoval = true,
+        cascade = [CascadeType.PERSIST, CascadeType.MERGE, CascadeType.REMOVE]
+    )
     @JoinColumn(name = "timeline_statistics_id")
     @Comment("타임라인 통계 FK")
     var timelineStatistics: TimelineStatistics? = null
