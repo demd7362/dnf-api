@@ -4,8 +4,11 @@ import com.fasterxml.jackson.databind.ObjectMapper
 import com.fasterxml.jackson.module.kotlin.readValue
 import com.taecho.dnfbackend.common.config.Credentials
 import com.taecho.dnfbackend.common.utils.DateUtils
+import com.taecho.dnfbackend.common.utils.HttpUtils
 import com.taecho.dnfbackend.logger
-import com.taecho.dnfbackend.timeline.dto.*
+import com.taecho.dnfbackend.timeline.dto.CharacterDto
+import com.taecho.dnfbackend.timeline.dto.CharacterServerDto
+import com.taecho.dnfbackend.timeline.dto.MostChannelsDto
 import com.taecho.dnfbackend.timeline.entity.Timeline
 import com.taecho.dnfbackend.timeline.entity.TimelineStatistics
 import com.taecho.dnfbackend.timeline.repository.TimelineRepository
@@ -16,7 +19,9 @@ import com.taecho.dnfbackend.timeline.response.TimelineResponse
 import org.springframework.core.ParameterizedTypeReference
 import org.springframework.stereotype.Service
 import org.springframework.web.client.RestClient
+import java.time.LocalDate
 import java.time.LocalDateTime
+import java.util.*
 
 @Service
 class DnfApiService(
@@ -179,7 +184,16 @@ class DnfApiService(
     }
 
     fun randomChannel(): String {
-        return channels.random()
+        val ip = HttpUtils.getClientIp()
+        val today = DateUtils.YYMMDD_FORMATTER.format(LocalDate.now())
+
+        // IP와 오늘 날짜를 합쳐서 시드 생성
+        val seed = (ip + today).hashCode().toLong()
+        val random = Random(seed)
+
+        val randomIndex = random.nextInt(channels.size)
+
+        return channels[randomIndex]
     }
 
     fun getChannelFrequencies(): ChannelFrequencyResponse {

@@ -37,7 +37,7 @@ class DnfApiController(private val dnfApiService: DnfApiService) {
         return ResponseEntity.ok(result)
     }
 
-    @GetMapping("/channels/random")
+    @GetMapping("/channels")
     fun randomChannel(): ResponseEntity<Any> {
         val result = dnfApiService.randomChannel()
         return ResponseEntity.ok(result)

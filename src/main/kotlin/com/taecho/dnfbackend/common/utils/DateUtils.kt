@@ -6,6 +6,7 @@ import java.time.format.DateTimeFormatter
 import kotlin.math.abs
 
 object DateUtils {
+    val YYMMDD_FORMATTER: DateTimeFormatter = DateTimeFormatter.ofPattern("yyMMdd")
     private val FORMATTER: DateTimeFormatter = DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm")
     fun getCurrentDate(): String {
         return FORMATTER.format(LocalDateTime.now())

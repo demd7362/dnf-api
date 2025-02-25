@@ -314,7 +314,7 @@
 			}
 			
 			async function getTaecho() {
-				const {data} = await axios.get('/api/channels/random')
+				const {data} = await axios.get('/api/channels')
 				alert(data + '으로 가거라...')
 			}
 			
@@ -462,9 +462,8 @@
 		<div class="container mx-auto px-4 py-8 max-w-4xl flex-grow">
 			<div class="bg-white rounded-xl shadow-lg p-6 space-y-6 hover:shadow-xl transition-shadow">
 				<div class="flex justify-center gap-2">
-					<span onclick="getTaecho()" class="text-2xl font-bold text-gray-800 cursor-pointer">채널 점지</span>
-					<div></div>
-					<a href="/statistics" class="text-2xl font-bold text-gray-800">통계 보기</a>
+					<button type="button" onclick="getTaecho()" class="text-2xl font-bold text-gray-800 cursor-pointer p-2">오늘의 채널 점지</button>
+					<a href="/statistics" class="text-2xl font-bold text-gray-800 p-2">전체 통계 조회</a>
 				</div>
 				<div class="space-y-4">
 					<div class="space-y-2">
