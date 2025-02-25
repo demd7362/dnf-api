@@ -8,14 +8,6 @@
 		<th:block th:replace='~{fragments/common :: commonHeader}'/>
 		<link rel="favicon" href="/favicon.ico">
 		<style>
-			@import url('https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@300;400;500;700&display=swap');
-			
-			body {
-				font-family: 'Noto Sans KR', sans-serif;
-				background-color: #f9fafb;
-				color: #374151;
-			}
-			
 			/* 모바일 화면에서 버튼 크기 조정 */
 			@media (max-width: 640px) {
 				.button-sm {
@@ -323,7 +315,7 @@
 			
 			async function getTaecho() {
 				const {data} = await axios.get('/api/channels/random')
-				alert(data)
+				alert(data + '으로 가거라...')
 			}
 			
 			$(document).ready(function () {
@@ -469,7 +461,11 @@
 	<body class="bg-gray-50 min-h-screen flex flex-col">
 		<div class="container mx-auto px-4 py-8 max-w-4xl flex-grow">
 			<div class="bg-white rounded-xl shadow-lg p-6 space-y-6 hover:shadow-xl transition-shadow">
-				<h1 onclick="getTaecho()" class="text-2xl font-bold text-gray-800 text-center cursor-pointer">태초줘</h1>
+				<div class="flex justify-center gap-2">
+					<span onclick="getTaecho()" class="text-2xl font-bold text-gray-800 cursor-pointer">채널 점지</span>
+					<div></div>
+					<a href="/statistics" class="text-2xl font-bold text-gray-800">통계 보기</a>
+				</div>
 				<div class="space-y-4">
 					<div class="space-y-2">
 						<label class="block text-sm font-medium text-gray-700">

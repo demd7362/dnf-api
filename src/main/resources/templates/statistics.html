@@ -1,11 +1,260 @@
 <!DOCTYPE html>
-<html lang="ko" xmlns:th="http://www.thymeleaf.org">
+<html xmlns:th="http://www.thymeleaf.org" lang="ko">
 	<head>
 		<meta charset="UTF-8">
 		<th:block th:replace='~{fragments/common :: commonHeader}'/>
-		<title>DNF 장비 타임라인 조회 : 태초줘</title>
+		<title>채널 통계</title>
+		<style>
+			.chart-container {
+				width: 90%;
+				max-width: 1200px;
+				margin: 20px auto;
+				padding: 20px;
+				box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+				border-radius: 8px;
+			}
+			.chart-section {
+				margin-bottom: 40px;
+			}
+			h1, h2 {
+				text-align: center;
+				color: #333;
+			}
+			.chart-row {
+				display: flex;
+				flex-wrap: wrap;
+				justify-content: space-around;
+				margin-bottom: 30px;
+			}
+			.chart-box {
+				width: 45%;
+				min-width: 300px;
+				margin-bottom: 20px;
+			}
+		</style>
 	</head>
 	<body>
-	
+		<div class="chart-container">
+			<h1>채널 빈도 통계</h1>
+			
+			<!-- Taecho Section -->
+			<div class="chart-section">
+				<h2>태초 채널 빈도</h2>
+				<div class="chart-row">
+					<div class="chart-box">
+						<canvas id="taecho-chart"></canvas>
+					</div>
+					<div class="chart-box">
+						<canvas id="taecho-bar-chart"></canvas>
+					</div>
+				</div>
+			</div>
+			
+			<!-- Epic Section -->
+			<div class="chart-section">
+				<h2>에픽 채널 빈도</h2>
+				<div class="chart-row">
+					<div class="chart-box">
+						<canvas id="epic-chart"></canvas>
+					</div>
+					<div class="chart-box">
+						<canvas id="epic-bar-chart"></canvas>
+					</div>
+				</div>
+			</div>
+			
+			<!-- Legendary Section -->
+			<div class="chart-section">
+				<h2>레전더리 채널 빈도</h2>
+				<div class="chart-row">
+					<div class="chart-box">
+						<canvas id="legendary-chart"></canvas>
+					</div>
+					<div class="chart-box">
+						<canvas id="legendary-bar-chart"></canvas>
+					</div>
+				</div>
+			</div>
+			
+			<!-- Combined Data Section -->
+			<div class="chart-section">
+				<h2>전체 채널 빈도 비교</h2>
+				<canvas id="combined-chart"></canvas>
+			</div>
+		</div>
+		
+		<script th:inline="javascript">
+			const channelFrequencies = [[${channelFrequencies}]]
+			console.log(channelFrequencies)
+			const colorPalette = [
+				'#FF6384', '#36A2EB', '#FFCE56', '#4BC0C0', '#9966FF',
+				'#FF9F40', '#8AC54F', '#FF5A5E', '#5D9CEC', '#FFDB72'
+			];
+			
+			function createPieChart(elementId, data, title) {
+				const ctx = document.getElementById(elementId).getContext('2d');
+				
+				const labels = data.map(item => item.channel);
+				const values = data.map(item => item.frequency);
+				
+				new Chart(ctx, {
+					type: 'pie',
+					data: {
+						labels: labels,
+						datasets: [{
+							data: values,
+							backgroundColor: colorPalette.slice(0, labels.length),
+							borderWidth: 1
+						}]
+					},
+					options: {
+						responsive: true,
+						plugins: {
+							legend: {
+								position: 'right',
+							},
+							title: {
+								display: true,
+								text: title
+							}
+						}
+					}
+				});
+			}
+			
+			function createBarChart(elementId, data, title) {
+				const ctx = document.getElementById(elementId).getContext('2d');
+				
+				const labels = data.map(item => item.channel);
+				const values = data.map(item => item.frequency);
+				
+				new Chart(ctx, {
+					type: 'bar',
+					data: {
+						labels: labels,
+						datasets: [{
+							label: '빈도',
+							data: values,
+							backgroundColor: colorPalette.slice(0, labels.length),
+							borderWidth: 1
+						}]
+					},
+					options: {
+						responsive: true,
+						scales: {
+							y: {
+								beginAtZero: true,
+								ticks: {
+									precision: 0
+								}
+							}
+						},
+						plugins: {
+							title: {
+								display: true,
+								text: title
+							}
+						}
+					}
+				});
+			}
+			
+			document.addEventListener('DOMContentLoaded', function() {
+				if (channelFrequencies.taecho && channelFrequencies.taecho.length > 0) {
+					createPieChart('taecho-chart', channelFrequencies.taecho, '태초 채널 분포');
+					createBarChart('taecho-bar-chart', channelFrequencies.taecho, '태초 채널 빈도');
+				}
+				
+				if (channelFrequencies.epic && channelFrequencies.epic.length > 0) {
+					createPieChart('epic-chart', channelFrequencies.epic, '에픽 채널 분포');
+					createBarChart('epic-bar-chart', channelFrequencies.epic, '에픽 채널 빈도');
+				}
+				
+				if (channelFrequencies.legendary && channelFrequencies.legendary.length > 0) {
+					createPieChart('legendary-chart', channelFrequencies.legendary, '레전더리 채널 분포');
+					createBarChart('legendary-bar-chart', channelFrequencies.legendary, '레전더리 채널 빈도');
+				}
+				
+				createCombinedChart();
+			});
+			
+			function createCombinedChart() {
+				const ctx = document.getElementById('combined-chart').getContext('2d');
+				
+				const datasets = [];
+				const categories = ['taecho', 'epic', 'legendary'];
+				const categoryLabels = ['태초', '에픽', '레전더리'];
+				
+				categories.forEach((category, index) => {
+					if (channelFrequencies[category] && channelFrequencies[category].length > 0) {
+						datasets.push({
+							label: categoryLabels[index],
+							data: channelFrequencies[category].map(item => item.frequency),
+							backgroundColor: colorPalette[index],
+							borderColor: colorPalette[index],
+							borderWidth: 1
+						});
+					}
+				});
+				
+				const allChannels = [];
+				categories.forEach(category => {
+					if (channelFrequencies[category]) {
+						channelFrequencies[category].forEach(item => {
+							if (!allChannels.includes(item.channel)) {
+								allChannels.push(item.channel);
+							}
+						});
+					}
+				});
+				
+				const alignedDatasets = categories.map((category, index) => {
+					const data = new Array(allChannels.length).fill(0);
+					
+					if (channelFrequencies[category]) {
+						channelFrequencies[category].forEach(item => {
+							const channelIndex = allChannels.indexOf(item.channel);
+							if (channelIndex !== -1) {
+								data[channelIndex] = item.frequency;
+							}
+						});
+					}
+					
+					return {
+						'label': categoryLabels[index],
+						data: data,
+						backgroundColor: colorPalette[index],
+						borderColor: colorPalette[index],
+						borderWidth: 1
+					};
+				});
+				
+				new Chart(ctx, {
+					type: 'bar',
+					data: {
+						labels: allChannels,
+						datasets: alignedDatasets
+					},
+					options: {
+						responsive: true,
+						scales: {
+							y: {
+								beginAtZero: true,
+								ticks: {
+									precision: 0
+								}
+							}
+						},
+						plugins: {
+							title: {
+								display: true,
+								text: '카테고리별 채널 빈도 비교'
+							}
+						}
+					}
+				});
+			}
+			
+		</script>
 	</body>
 </html>
