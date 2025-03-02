@@ -74,15 +74,27 @@ class DnfApiService(
         return result.rows[0] // 서버, 캐릭터 검색이므로 [0]
     }
 
-    private fun filterTimeline(rawData: TimelineResponse): List<TimelineResponse.Timeline.TimelineRow> {
+    private fun filterTimeline(rawData: TimelineResponse): Pair<MutableList<TimelineResponse.Timeline.TimelineRow>, MutableMap<String, MutableList<TimelineResponse.Timeline.TimelineRow>>> {
         // filtering + characterName 추가
-        return rawData.timeline.rows.fold(emptyList()) { acc: List<TimelineResponse.Timeline.TimelineRow>, row ->
+        val groupedByAbyss = mutableMapOf<String, MutableList<TimelineResponse.Timeline.TimelineRow>>()
+        val result = rawData.timeline.rows.fold(mutableListOf()) { acc: MutableList<TimelineResponse.Timeline.TimelineRow>, row ->
             val isHell = row.code == 505 && row.data.dungeonName in HELL_DUNGEONS
             val isCard = row.code == 513 && row.data.dungeonName in CARD_DUNGEONS
             val isBossDrop = row.code == 505 && row.data.dungeonName in COMMON_DUNGEON
             row.characterName = rawData.characterName
-            if (isCard || isHell || isBossDrop) acc + listOf(row) else acc
+            if(row.data.dungeonName == "심연 : 종말의 숭배자"){
+                val key = "${row.date} ${row.data.channelName} ${row.data.channelNo}"
+                groupedByAbyss.computeIfAbsent(key) { mutableListOf() }.add(row)
+            }
+            if (isCard || isHell || isBossDrop) {
+                acc.add(row)
+            }
+            acc
         }
+        return Pair(
+            first = result,
+            second = groupedByAbyss
+        )
     }
 
     private fun countMostChannels(filteredTimelines: List<TimelineResponse.Timeline.TimelineRow>): MostChannelsDto {
@@ -127,6 +139,14 @@ class DnfApiService(
         }
         return filteredTimelines
     }
+    private fun <T> mergeGroupedData(source: MutableMap<String, MutableList<T>>, target: MutableMap<String, MutableList<T>>) {
+        for((k,v) in source){
+            if(k !in target){
+                target[k] = mutableListOf()
+            }
+            target[k]!! += v
+        }
+    }
 
     fun searchTimeline(serverId: String, characterName: String): List<TimelineResponse.Timeline.TimelineRow> {
         val charactorDto = searchCharacter(serverId, characterName) ?: return emptyList()
@@ -143,15 +163,15 @@ class DnfApiService(
             .uri("/df/servers/$serverId/characters/${charactorDto.characterId}/timeline?apikey=${getApiKey()}&limit=100&code=505,513&startDate=2025-01-09 00:00&endDate=${DateUtils.getCurrentDate()}") // 던전 드랍, 카드 보상
             .retrieve()
             .body(TimelineResponse::class.java)!!
-        val filteredTimelines: MutableList<TimelineResponse.Timeline.TimelineRow> =
-            filterTimeline(rawData).toMutableList()
-
+        val (filteredTimelines, groupedByAbyss) = filterTimeline(rawData)
         while (rawData.timeline.next != null) {
             rawData = restClient.get()
                 .uri("/df/servers/$serverId/characters/${charactorDto.characterId}/timeline?apikey=${getApiKey()}&limit=100&code=505,513&startDate=2025-01-09 00:00&endDate=${DateUtils.getCurrentDate()}&next=${rawData.timeline.next}") // 던전 드랍, 카드 보상
                 .retrieve()
                 .body(TimelineResponse::class.java)!!
-            filteredTimelines += filterTimeline(rawData)
+            val (additionalTimelines, additionalGroupedByAbyss) = filterTimeline(rawData)
+            filteredTimelines += additionalTimelines
+            mergeGroupedData(additionalGroupedByAbyss, groupedByAbyss)
         }
         val newTimeline = if (timeline == null) {
             Timeline(

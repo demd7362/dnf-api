@@ -13,7 +13,7 @@ data class TimelineResponse(
     val jobName: String,
     val level: Int,
     val serverId: String,
-    val timeline: Timeline
+    val timeline: Timeline,
 ) {
     data class Timeline(
         val date: Date,
@@ -30,7 +30,8 @@ data class TimelineResponse(
             val data: TimelineData,
             val date: String,
             val name: String,
-            var characterName: String?
+            var characterName: String?,
+            var groupedByAbyss: Map<String, List<*>>?
         ) {
             data class TimelineData(
                 val channelName: String?,
