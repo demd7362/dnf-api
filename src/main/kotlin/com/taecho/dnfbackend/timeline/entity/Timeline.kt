@@ -27,7 +27,7 @@ class Timeline(
     @Comment("모험단명")
     var adventureName: String,
 
-    @Column(name = "filtered_timeline", nullable = false, columnDefinition = "TEXT")
+    @Column(name = "filtered_timeline", nullable = false, columnDefinition = "MEDIUMTEXT")
     @Comment("필터링된 타임라인")
     var filteredTimeline: String,
 
